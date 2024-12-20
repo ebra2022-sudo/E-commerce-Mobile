@@ -1,12 +1,12 @@
 package com.example.e_commerce_mobile.screens.user_account_management
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,9 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -33,28 +31,29 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.screens.Screens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    viewModel: UserAccountManagementViewModel = viewModel()
+    viewModel: UserAccountManagementViewModel = viewModel(),
+    navController: NavController = NavController(context = LocalContext.current)
 ) {
     Scaffold(
-        topBar = { HeadlineAppBar(title = "Sign Up") }
+        topBar = { HeadlineAppBar(title = "Sign Up", onNavigationClick = {navController.navigateUp()}) }
 
     ) {
         Column(
@@ -66,7 +65,7 @@ fun SignUpScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(100.dp))
-            Form(
+            FormSignUp(
                 modifier = Modifier
                     .padding(bottom = 16.dp),
                 name = viewModel.signUpName,
@@ -85,6 +84,7 @@ fun SignUpScreen(
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                 )
                 Icon(
+                    modifier = Modifier.clickable(onClick = {navController.navigate(Screens.LogInScreen.route)}),
                     painter = painterResource(R.drawable.to),
                     contentDescription = "to login Screen button",
                     tint = Color.Unspecified
@@ -157,6 +157,31 @@ fun SignUpScreen(
                             )
                         }
                     }
+                    Card(
+                        modifier = Modifier
+                            .size(width = 100.dp, height = 64.dp)
+                            .shadow(
+                                elevation = 10.dp,
+                                shape = RoundedCornerShape(25.dp),
+                                spotColor = Color(0xFF9B9B9B)
+                            ),
+                        shape = RoundedCornerShape(25.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.x_icon),
+                                contentDescription = "google icon",
+                                tint = Color.Unspecified
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -168,7 +193,8 @@ fun SignUpScreen(
 @Composable
 fun HeadlineAppBar(
     modifier: Modifier = Modifier,
-    title: String
+    title: String,
+    onNavigationClick: () -> Unit = {}
 ) {
     LargeTopAppBar(
         title = {
@@ -183,7 +209,7 @@ fun HeadlineAppBar(
             Icon(
                 painter = painterResource(id = R.drawable.back),
                 contentDescription = null,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp).clickable { onNavigationClick() }
             )
         },
         modifier = Modifier.height(140.dp),
@@ -195,7 +221,7 @@ fun HeadlineAppBar(
 
 
 @Composable
-fun Form(modifier: Modifier = Modifier, name:String = "", email:String = "", password:String = "", onNameChange: (String) -> Unit = {}, onEmailChange: (String) -> Unit = {}, onPasswordChange: (String) -> Unit = {}) {
+fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "", password:String = "", onNameChange: (String) -> Unit = {}, onEmailChange: (String) -> Unit = {}, onPasswordChange: (String) -> Unit = {}) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(15.dp)) {
         TextField(
             value = name,

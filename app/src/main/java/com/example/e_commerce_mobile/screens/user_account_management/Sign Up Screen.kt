@@ -75,7 +75,8 @@ fun SignUpScreen(
                 onEmailChange = viewModel.onSignUpEmailChange,
                 onPasswordChange = viewModel.onSignUpPasswordChange)
             Row(
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.align(Alignment.End).clickable(onClick = {navController.navigate(
+                    Screens.LogInScreen.route)}),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -84,7 +85,7 @@ fun SignUpScreen(
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                 )
                 Icon(
-                    modifier = Modifier.clickable(onClick = {navController.navigate(Screens.LogInScreen.route)}),
+                    modifier = Modifier,
                     painter = painterResource(R.drawable.to),
                     contentDescription = "to login Screen button",
                     tint = Color.Unspecified

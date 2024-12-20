@@ -1,6 +1,7 @@
 package com.example.e_commerce_mobile.screens.user_account_management
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,7 +75,7 @@ fun LogInScreen(
                 onEmailChange = viewModel.onLogInEmailChange,
                 onPasswordChange = viewModel.onLogInPasswordChange)
             Row(
-                modifier = Modifier.align(Alignment.End),
+                modifier = Modifier.align(Alignment.End).clickable(onClick = {navController.navigate(Screens.PasswordResetScreen.route)}),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(

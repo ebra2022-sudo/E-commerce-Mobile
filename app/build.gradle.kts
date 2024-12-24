@@ -41,6 +41,7 @@ android {
 
 dependencies {
 
+    implementation(libs.accompanist.systemuicontroller.v0360)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.core.ktx)

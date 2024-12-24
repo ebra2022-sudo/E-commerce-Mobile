@@ -1,4 +1,5 @@
 [versions]
+accompanistSystemuicontrollerVersion = "0.36.0"
 agp = "8.7.3"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
@@ -11,6 +12,7 @@ composeBom = "2024.04.01"
 navigationCompose = "2.8.5"
 
 [libraries]
+accompanist-systemuicontroller-v0360 = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontrollerVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }

@@ -12,5 +12,4 @@ fun FavoritesMainScreen(modifier: Modifier = Modifier) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text("This is Favorite Main Screen")
     }
-    
 }

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -690,13 +691,14 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
                         CategoryAndSearchScreen(navController = navController, allProducts = allProducts)
                     }
                 }
-                navigation(startDestination = Screens.SubCategoryProductsOverviewScreen.withArgs(), route = Screens.ProductDisplayAndInformation.route) {
+                navigation(startDestination = Screens.SubCategoryProductsOverviewScreen.route, route = Screens.ProductDisplayAndInformation.route) {
                     composable(
-                        route = Screens.SubCategoryProductsOverviewScreen.route +"/{mainCategory}/{subCategoryTitle}",
+                        route = Screens.SubCategoryProductsOverviewScreen.withArgs("{mainCategory}/{subCategoryTitle}"),
                         arguments = listOf(
                             navArgument("mainCategory") { type = NavType.StringType },
                             navArgument("subCategoryTitle") { type = NavType.StringType }
                         )
+
                     ) { backStackEntry ->
                         // Retrieve arguments safely
                         val subCategoryTitle = backStackEntry.arguments?.getString("subCategoryTitle") ?: "Unknown"
@@ -727,7 +729,7 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
 
 @Composable
 fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavController) {
-    var selectedItem by remember { mutableIntStateOf(0) }
+    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
     val items = listOf(Screens.Home.route, Screens.Shop.route, Screens.Bag.route, Screens.Favorites.route, Screens.Profile.route)
     val unSelectedIconResources = listOf(R.drawable.outlined_home, R.drawable.outlined_shop, R.drawable.outlined_bag, R.drawable.outlined_favorite, R.drawable.outlined_profile)
     val selectedIconResources = listOf(R.drawable.filled_home, R.drawable.filled_shop, R.drawable.filled_bag, R.drawable.filled_favorite, R.drawable.filled_profile)
@@ -791,34 +793,14 @@ fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavControl
 fun shouldShowBottomNavigation(currentRoute: String?): Boolean {
     return currentRoute in listOf(
         Screens.HomeMainScreen.route,
-        Screens.ShopMainScreen.route,
+        Screens.CategoryAndSearchScreen.route,
+        Screens.SubCategoryProductsOverviewScreen.withArgs("{mainCategory}/{subCategoryTitle}"),
         Screens.BagMainScreen.route,
         Screens.FavoritesMainScreen.route,
         Screens.ProfileMainScreen.route
     )
 }
-
-fun hasTopAppBar(currentRoute: String?): Boolean {
-    if (currentRoute == null) return false
-    return currentRoute in listOf(
-        Screens.ShopMainScreen.route
-    )
-}
-
-
-
-
-
-
-@Composable
-fun StatusBarHeight(): Int {
-    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val density = LocalDensity.current
-    return with(density) { statusBarInset.roundToPx() } // Convert to pixels
-}
-
-
-
+// design sample case
 
 
 

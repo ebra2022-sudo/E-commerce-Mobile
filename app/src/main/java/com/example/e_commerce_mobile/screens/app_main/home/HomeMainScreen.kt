@@ -22,6 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -39,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +50,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.screens.app_main.home.CustomImageWithFavoriteCircle
+import com.example.e_commerce_mobile.screens.app_main.home.StarRating
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -99,7 +107,7 @@ fun HomeMainScreen(
             SectionHeader(title = "Sale", subtitle = "Super summer sale")
             val productsSale = List(6) { index ->
                 @Composable { width: Int ->
-                    ProductOverviewCard(
+                    ProductOverviewCardVertical(
                         width = width,
                         isNew = false,
                         discountPercent =10,
@@ -119,7 +127,7 @@ fun HomeMainScreen(
             SectionHeader(title = "New", subtitle = "You've never seen before!")
             val productsNew = List(6) { index ->
                 @Composable { width: Int ->
-                    ProductOverviewCard(
+                    ProductOverviewCardVertical(
                         width = width,
                         isNew = true,
                         discountPercent = 0,
@@ -142,7 +150,7 @@ fun HomeMainScreen(
             SectionHeader(title = "Recommended", subtitle = "Just for you!")
             val productsRecommended = List(6) { index ->
                 @Composable { width: Int ->
-                    ProductOverviewCard(
+                    ProductOverviewCardVertical(
                         width = width,
                         isNew = false,
                         discountPercent =10,
@@ -157,12 +165,7 @@ fun HomeMainScreen(
                 spacer = 16, // Space between items
                 items = productsRecommended
             )
-
-
         }
-
-
-
     }
 }
 
@@ -212,9 +215,33 @@ fun LazyRowWithKItemsPerScreen(
 }
 
 
+@Composable
+fun VerticalLazyGridWithKItemsPerScreen(
+    modifier: Modifier = Modifier,
+    nestedScrollConnection: NestedScrollConnection,
+    k: Int,
+    spacer: Int = 0,
+    items: List<@Composable (width: Int) -> Unit>
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    val itemWidth = (screenWidth - ((k - 1) * spacer)) / k
+    LazyVerticalGrid(
+        modifier = modifier.nestedScroll(nestedScrollConnection),
+        columns = GridCells.Fixed(k),
+        verticalArrangement = Arrangement.spacedBy(spacer.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacer.dp)
+    ) {
+        items(items) { item ->
+            item(itemWidth)
+        }
+    }
+}
+
+
 
 @Composable
-fun ProductOverviewCard(
+fun ProductOverviewCardVertical(
     width: Int,
     isNew: Boolean = false,
     discountPercent: Int = 5,
@@ -225,8 +252,9 @@ fun ProductOverviewCard(
     onProductOverviewClick: () -> Unit = {}) {
     Column (modifier = Modifier
         .shadow(elevation = 8.dp, shape = RoundedCornerShape(5.dp), spotColor = Color(0xFF9B9B9B))
-        .size(width = width.dp, height = 285.dp)
-        .clip(RoundedCornerShape(5.dp)).clickable(onClick = onProductOverviewClick)
+        .width(width = width.dp)
+        .clip(RoundedCornerShape(5.dp))
+        .clickable(onClick = onProductOverviewClick)
         .background(Color.White)
         .padding(3.dp)) {
         CustomImageWithFavoriteCircle(modifier = Modifier
@@ -294,6 +322,159 @@ fun ProductOverviewCard(
 
     }
     
+}
+
+
+@Composable
+fun ProductOverviewCardHorizontal(
+    isNew: Boolean = true,
+    discountPercent: Int = 5,
+    onFavorite: (Boolean) -> Unit = {},
+    productImage: Int = R.drawable.watch_hermes_ultra_digitalmat_gallery_1_202409,
+    rating: Float = 4.9f,
+    price: Double = 1399.0,
+    onProductOverviewClick: () -> Unit = {}){
+    var isFavorite by rememberSaveable() { mutableStateOf(false) }
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(155.dp)) {
+        Row(
+            modifier = Modifier
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(10.dp),
+                    spotColor = Color(0xFF9B9B9B)
+                )
+                .fillMaxWidth()
+                .fillMaxHeight(0.95f)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(onClick = onProductOverviewClick)
+                .background(Color.White)
+                .padding(4.dp)
+                .align(Alignment.TopCenter),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box {
+                Image(
+                    painter = painterResource(id = productImage),
+                    contentDescription = "product image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(5.dp))
+                        .border(
+                            width = 1.dp,
+                            color = Color.LightGray,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                )
+                if (isNew) {
+                    Surface(modifier = Modifier
+                        .padding(5.dp)
+                        .size(40.dp, 24.dp)
+                        .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
+                        .align(Alignment.TopStart),
+                        color = Color.Black,
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "New", color = Color(0xFFFFFFFF))
+                        }
+                    }
+                }
+                if (discountPercent > 0) {
+                    Surface(modifier = Modifier
+                        .padding(5.dp)
+                        .size(40.dp, 24.dp)
+                        .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
+                        .align(Alignment.TopEnd),
+                        color = Color(0xFFDB3022),
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(text = "-$discountPercent%", color = Color(0xFFFFFFFF))
+                        }
+                    }
+
+                }
+            }
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Bottom,
+                ) {
+                    Text(
+                        text = "Apple Watch Hermès Ultra 2",
+                        style = TextStyle(
+                            fontFamily = FontFamily(Font(R.font.metropolis_medium)),
+                            fontSize = 15.sp
+                        ),
+                        fontWeight = FontWeight.W800,
+                        color = Color(0xFF222222),
+                        maxLines = 2,
+                        modifier = Modifier.padding(top = 5.dp)
+                    )
+                    Text(
+                        text = buildAnnotatedString {
+                            if (discountPercent > 0) {
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = Color(0xFF9B9B9B),
+                                        textDecoration = TextDecoration.LineThrough
+                                    )
+                                ) {
+                                    append("$price\$")
+                                }
+
+                                withStyle(style = SpanStyle(color = Color(0xFFDB3022))) {
+                                    append("    ${(price - (price * discountPercent / 100))}\$")
+                                }
+                            } else {
+                                withStyle(style = SpanStyle(color = Color(0xFF222222))) {
+                                    append("$price\$")
+                                }
+                            }
+
+                        },
+                        style = TextStyle(
+                            fontFamily = FontFamily(Font(R.font.metropolis_medium)),
+                            fontSize = 12.sp
+                        ),
+                        color = Color(0xFF222222),
+                        fontWeight = FontWeight.W100,
+                        maxLines = 2,
+                        modifier = Modifier.padding(top = 5.dp)
+                    )
+                }
+                StarRating(rating = rating)
+                Text(
+                    text = "Smart watch",
+                    style = TextStyle(
+                        fontFamily = FontFamily(Font(R.font.metropolis_medium)),
+                        fontSize = 10.sp
+                    ),
+                    fontWeight = FontWeight.W300,
+                    color = Color(0xFF9B9B9B),
+                    modifier = Modifier.padding(top = 5.dp)
+                )
+
+            }
+        }
+        Surface(modifier = Modifier
+            .size(40.dp)
+            .shadow(elevation = 10.dp, shape = CircleShape)
+            .align(Alignment.BottomEnd)
+            .clickable(onClick = {
+                isFavorite = !isFavorite
+                onFavorite(isFavorite)
+            }),
+            color = Color.White,
+        ) {
+            Icon(painter = painterResource(id = if (isFavorite) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
+
+        }
+    }
 }
 
 @Composable
@@ -478,12 +659,14 @@ private fun Preview() {
     // HomeScreen()
     // StarRating(rating = 1.32f)
     // ProductCardNew()
-    AdCardDisplay(imageResourceWithDescription = listOf(
-        Pair(R.drawable.ad_1, "Latest Devices"),
-        Pair(R.drawable.ad_2, "Galaxy Smart"),
-        Pair(R.drawable.ad_3,"Negotiable Prices"),
-        Pair(R.drawable.ad_4,"Luxury Cars")
+//    AdCardDisplay(imageResourceWithDescription = listOf(
+//        Pair(R.drawable.ad_1, "Latest Devices"),
+//        Pair(R.drawable.ad_2, "Galaxy Smart"),
+//        Pair(R.drawable.ad_3,"Negotiable Prices"),
+//        Pair(R.drawable.ad_4,"Luxury Cars")
+//
+//    )
+//    )
 
-    )
-    )
+    ProductOverviewCardHorizontal()
 }

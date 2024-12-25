@@ -134,7 +134,6 @@ fun SubcategoryAdCard() {
                 Text(text = "Up to 50% Off")
             }
         }
-
     }
 }
 

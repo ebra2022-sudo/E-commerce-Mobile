@@ -40,6 +40,12 @@ android {
 }
 
 dependencies {
+    // Retrofit library
+    implementation (libs.retrofit)
+    // Retrofit Gson converter
+    implementation (libs.converter.gson)
+    // Gson library (optional if not included elsewhere)
+    implementation (libs.gson)
 
     implementation(libs.accompanist.systemuicontroller.v0360)
     implementation(libs.androidx.navigation.compose)

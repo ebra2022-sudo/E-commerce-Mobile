@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.favorites
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.favorites
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.shop.product_display_and_information
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information
 
 import android.content.res.Configuration
 import android.util.Log
@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope

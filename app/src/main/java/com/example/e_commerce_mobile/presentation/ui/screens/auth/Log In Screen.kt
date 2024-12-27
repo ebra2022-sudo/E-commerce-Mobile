@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.auth
+package com.example.e_commerce_mobile.presentation.ui.screens.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +28,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -43,7 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
-import com.example.e_commerce_mobile.screens.Screens
+import com.example.e_commerce_mobile.presentation.navigation.Screens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +58,12 @@ fun LogInScreen(
             onNavigationClick = {navController.navigateUp()}) }
 
     ) {
+        val loginStatus = viewModel.loginStatus.collectAsState().value
+        if (loginStatus == "Login successful") {
+            LaunchedEffect(Unit) {
+                navController.navigate(Screens.Home.route)
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,8 +80,10 @@ fun LogInScreen(
                     .padding(bottom = 16.dp),
                 email = viewModel.logInEmail,
                 password = viewModel.logInPassword,
+                ip = viewModel.logInIp,
                 onEmailChange = viewModel.onLogInEmailChange,
-                onPasswordChange = viewModel.onLogInPasswordChange)
+                onPasswordChange = viewModel.onLogInPasswordChange,
+                onIpChange = viewModel.onLogInIpChange)
             Row(
                 modifier = Modifier.align(Alignment.End).clickable(onClick = {navController.navigate(Screens.PasswordResetScreen.route)}),
                 verticalAlignment = Alignment.CenterVertically
@@ -89,11 +99,11 @@ fun LogInScreen(
                     tint = Color.Unspecified
                 )
             }
+            // design system of the button
             Spacer(modifier = Modifier.height(50.dp))
             ElevatedButton(
                 onClick = {
-                    if(viewModel.logInEmail == "ebrahimmuhammed479@gmail.com" && viewModel.logInPassword == "@#0214Mu")
-                        navController.navigate(Screens.Home.route)
+                    viewModel.loginUser()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDB3022),
@@ -123,7 +133,7 @@ fun LogInScreen(
                 ) {
                     Card(
                         modifier = Modifier
-                            .size(width = 100.dp, height = 64.dp)
+                            .size(width = 100.dp, height = 64.dp).clickable(onClick = {viewModel.updateBaseUrl()})
                             .shadow(
                                 elevation = 10.dp,
                                 shape = RoundedCornerShape(25.dp),
@@ -208,7 +218,13 @@ fun LogInScreen(
 
 
 @Composable
-fun FormLogIn(modifier: Modifier = Modifier, email:String = "", password:String = "", onEmailChange: (String) -> Unit = {}, onPasswordChange: (String) -> Unit = {}) {
+fun FormLogIn(modifier: Modifier = Modifier,
+              email:String = "",
+              password:String = "",
+              ip:String = "",
+              onEmailChange: (String) -> Unit = {},
+              onPasswordChange: (String) -> Unit = {},
+              onIpChange: (String) -> Unit = {}) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(15.dp)) {
         TextField(
             value = email,
@@ -220,7 +236,6 @@ fun FormLogIn(modifier: Modifier = Modifier, email:String = "", password:String 
                     fontSize = 15.sp,
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                 )
-
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -262,8 +277,32 @@ fun FormLogIn(modifier: Modifier = Modifier, email:String = "", password:String 
         )
     }
 
-}
+    TextField(
+        value = ip,
+        onValueChange = {onIpChange(it)},
+        label = {
+            Text(
+                "Ip Address",
+                color = Color(0xFF9B9B9B),
+                fontSize = 15.sp,
+                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+            )
 
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(74.dp)
+            .shadow(
+                elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
+            ),
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
+        shape = RoundedCornerShape(10.dp)
+    )
+}
 
 @Preview
 @Composable

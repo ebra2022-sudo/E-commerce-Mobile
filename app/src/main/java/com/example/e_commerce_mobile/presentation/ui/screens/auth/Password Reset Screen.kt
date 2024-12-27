@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.auth
+package com.example.e_commerce_mobile.presentation.ui.screens.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

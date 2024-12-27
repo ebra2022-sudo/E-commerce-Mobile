@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.home
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.home
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.tween

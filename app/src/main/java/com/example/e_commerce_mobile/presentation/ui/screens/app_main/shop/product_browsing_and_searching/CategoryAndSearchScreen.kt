@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes

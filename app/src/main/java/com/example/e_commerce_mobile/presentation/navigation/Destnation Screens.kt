@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens
+package com.example.e_commerce_mobile.presentation.navigation
 
 enum class Screens(val route: String) {
     Auth("Auth"),

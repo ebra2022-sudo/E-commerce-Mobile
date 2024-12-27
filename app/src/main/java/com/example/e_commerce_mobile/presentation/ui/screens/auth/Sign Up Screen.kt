@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.auth
+package com.example.e_commerce_mobile.presentation.ui.screens.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,14 +64,18 @@ fun SignUpScreen(
                 .padding(16.dp).verticalScroll(rememberScrollState()).imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             FormSignUp(
                 modifier = Modifier
                     .padding(bottom = 16.dp),
-                name = viewModel.signUpName,
+                firstName = viewModel.signUpFirstName,
+                lastName = viewModel.signUpLastName,
                 email = viewModel.signUpEmail,
+                phoneNumber = viewModel.signUpPhoneNumber,
                 password = viewModel.signUpPassword,
-                onNameChange = viewModel.onSignUpNameChange,
+                onFirstNameChange = viewModel.onSignUpFirstNameChange,
+                onLastNameChange = viewModel.onSignUpLastNameChange,
+                onPhoneNumberChange = viewModel.onSignUpPhoneNumberChange,
                 onEmailChange = viewModel.onSignUpEmailChange,
                 onPasswordChange = viewModel.onSignUpPasswordChange)
             Row(
@@ -93,7 +97,7 @@ fun SignUpScreen(
             }
             Spacer(modifier = Modifier.height(50.dp))
             ElevatedButton(
-                onClick = {},
+                onClick = { viewModel.registerUser()},
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDB3022),
                     contentColor = Color.White
@@ -109,7 +113,7 @@ fun SignUpScreen(
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                 )
             }
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     "Or sign up with social account",
@@ -128,6 +132,7 @@ fun SignUpScreen(
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
+                        // box design the sytem
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -147,6 +152,7 @@ fun SignUpScreen(
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
+                        // card for google icon
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -197,6 +203,7 @@ fun HeadlineAppBar(
     title: String,
     onNavigationClick: () -> Unit = {}
 ) {
+    // tio app bar of hte  design the ystem
     LargeTopAppBar(
         title = {
             Text(
@@ -219,17 +226,29 @@ fun HeadlineAppBar(
         )
     )
 }
+// django sample ofthe  current vlaueo the   sampeof th  sam
+// sample casting
 
 
 @Composable
-fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "", password:String = "", onNameChange: (String) -> Unit = {}, onEmailChange: (String) -> Unit = {}, onPasswordChange: (String) -> Unit = {}) {
+fun FormSignUp(modifier: Modifier = Modifier,
+               firstName:String = "",
+               lastName:String = "",
+               email:String = "",
+               phoneNumber:String = "",
+               password:String = "",
+               onFirstNameChange: (String) -> Unit = {},
+               onLastNameChange: (String) -> Unit = {},
+               onPhoneNumberChange: (String) -> Unit = {},
+               onEmailChange: (String) -> Unit = {},
+               onPasswordChange: (String) -> Unit = {}) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(15.dp)) {
         TextField(
-            value = name,
-            onValueChange = {onNameChange(it)},
+            value = firstName,
+            onValueChange = {onFirstNameChange(it)},
             label = {
                     Text(
-                        "Name",
+                        "First Name",
                         color = Color(0xFF9B9B9B),
                         fontSize = 15.sp,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
@@ -238,7 +257,7 @@ fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(74.dp)
+                .height(70.dp)
                 .shadow(
                     elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
                 ),
@@ -251,20 +270,20 @@ fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "
 
         )
         TextField(
-            value = email,
-            onValueChange = {onEmailChange(it)},
+            value = lastName,
+            onValueChange = {onLastNameChange(it)},
             label = {
-                    Text(
-                        "Email",
-                        color = Color(0xFF9B9B9B),
-                        fontSize = 15.sp,
-                        style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
-                    )
+                Text(
+                    "Last Name",
+                    color = Color(0xFF9B9B9B),
+                    fontSize = 15.sp,
+                    style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+                )
 
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(74.dp)
+                .height(70.dp)
                 .shadow(
                     elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
                 ),
@@ -274,6 +293,59 @@ fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "
                 unfocusedIndicatorColor = Color.Transparent
             ),
             shape = RoundedCornerShape(10.dp)
+
+        )
+
+        TextField(
+            value = email,
+            onValueChange = {onEmailChange(it)},
+            label = {
+                    Text(
+                        "Phone Number",
+                        color = Color(0xFF9B9B9B),
+                        fontSize = 15.sp,
+                        style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+                    )
+
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .shadow(
+                    elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
+                ),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(10.dp)
+        )
+        TextField(
+            value = phoneNumber,
+            onValueChange = {onPhoneNumberChange(it)},
+            label = {
+                Text(
+                    "Email",
+                    color = Color(0xFF9B9B9B),
+                    fontSize = 15.sp,
+                    style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+                )
+
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .shadow(
+                    elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
+                ),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+            shape = RoundedCornerShape(10.dp)
+
         )
         TextField(
             value = password,
@@ -285,11 +357,10 @@ fun FormSignUp(modifier: Modifier = Modifier, name:String = "", email:String = "
                         fontSize = 15.sp,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                     )
-
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(74.dp)
+                .height(70.dp)
                 .shadow(
                     elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
                 ),

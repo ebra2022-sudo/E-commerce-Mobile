@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.shop.product_display_and_information
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

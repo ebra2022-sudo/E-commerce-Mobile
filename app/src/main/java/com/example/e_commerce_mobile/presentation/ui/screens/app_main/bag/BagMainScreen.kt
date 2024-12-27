@@ -1,4 +1,4 @@
-package com.example.e_commerce_mobile.screens.app_main.bag
+package com.example.e_commerce_mobile.presentation.ui.screens.app_main.bag
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

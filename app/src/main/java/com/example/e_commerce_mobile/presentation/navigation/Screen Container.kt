@@ -1,14 +1,11 @@
-package com.example.e_commerce_mobile.screens
+package com.example.e_commerce_mobile.presentation.navigation
 
 
 import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,14 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,23 +35,23 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.e_commerce_mobile.R
-import com.example.e_commerce_mobile.screens.app_main.bag.BagMainScreen
-import com.example.e_commerce_mobile.screens.app_main.favorites.FavoritesMainScreen
-import com.example.e_commerce_mobile.screens.app_main.home.HomeMainScreen
-import com.example.e_commerce_mobile.screens.app_main.profile.ProfileMainScreen
-import com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
-import com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching.Product
-import com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching.SubcategoryItem
-import com.example.e_commerce_mobile.screens.app_main.shop.product_display_and_information.SubCategoryProductsOverviewScreen
-import com.example.e_commerce_mobile.screens.auth.LogInScreen
-import com.example.e_commerce_mobile.screens.auth.PasswordResetScreen
-import com.example.e_commerce_mobile.screens.auth.SignUpScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.bag.BagMainScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.favorites.FavoritesMainScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.HomeMainScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.profile.ProfileMainScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.Product
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.SubcategoryItem
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.SubCategoryProductsOverviewScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.auth.LogInScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.auth.PasswordResetScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.auth.SignUpScreen
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ScreenContainer(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val isAuthenticated = true // Replace with actual authentication logic
+    val isAuthenticated = false // Replace with actual authentication logic
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
     Log.d("currentRoute", currentRoute.toString())
@@ -513,6 +508,8 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
             imageId = R.drawable.men,
             price = "$19.99"
         ),
+
+        // product os the  currtnt  vaue of the selected category
         Product(
             mainCategory = "Machinery",
             subCategory = SubcategoryItem(title = "Textile", imageId = R.drawable.men),
@@ -682,13 +679,17 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
             }
             // Main App flow
             navigation(startDestination = Screens.HomeMainScreen.route, route = Screens.Home.route) {
-                composable(Screens.HomeMainScreen.route, enterTransition = {slideInHorizontally { it }},
+                composable(
+                    Screens.HomeMainScreen.route, enterTransition = {slideInHorizontally { it }},
                     exitTransition = {slideOutHorizontally{ -it}}) { HomeMainScreen(navController = navController) }
             }
             navigation(startDestination = Screens.ProductBrowsingAndSearching.route, route = Screens.Shop.route) {
                 navigation(startDestination = Screens.CategoryAndSearchScreen.route, route = Screens.ProductBrowsingAndSearching.route) {
                     composable(Screens.CategoryAndSearchScreen.route) {
-                        CategoryAndSearchScreen(navController = navController, allProducts = allProducts)
+                        CategoryAndSearchScreen(
+                            navController = navController,
+                            allProducts = allProducts
+                        )
                     }
                 }
                 navigation(startDestination = Screens.SubCategoryProductsOverviewScreen.route, route = Screens.ProductDisplayAndInformation.route) {
@@ -714,6 +715,7 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
                     }
                 }
             }
+            // sample of the  ste of he  current valeu of the  sate of the design state of then
             navigation(startDestination = Screens.BagMainScreen.route, route = Screens.Bag.route) {
                 composable(Screens.BagMainScreen.route) { BagMainScreen() }
             }

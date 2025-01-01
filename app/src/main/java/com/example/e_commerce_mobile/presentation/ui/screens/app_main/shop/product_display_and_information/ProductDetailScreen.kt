@@ -1,5 +1,6 @@
 package com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,6 +10,7 @@ import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,11 +25,14 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,16 +48,50 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @Composable
 fun ProductDetailScreen(modifier: Modifier = Modifier,
-                        navController: NavController = NavController(context = LocalContext.current)
+                        navController: NavController = NavController(context = LocalContext.current),
+                        productId: Int,
+                        viewModel: ProductViewModel = hiltViewModel()
 ) {
+
+
+    Log.d("productId", productId.toString())
+    LaunchedEffect(productId) {
+        viewModel.getCurrentProduct(productId = productId)
+    }
+    val product = viewModel.currentProduct.collectAsState().value
+    Log.d("product", product.toString())
+    when (product) {
+        null -> {
+            CircularProgressIndicator()
+            // Show loading or placeholder
+        }
+        else -> {
+            // Display the product details
+            Column(modifier = Modifier.fillMaxSize()) {
+                HorizontalPagerDemo(imageResources = product!!.images.map { it.image?:""})
+                Text(text = product.name)
+                Text(text = product.price.toString())
+                Text(text = product.discount.toString())
+                Text(text = product.userRating.toString())
+                Text(text = product.isLiked.toString())
+
+
+            }
+        }
+
+    }
+
     
 }
 
@@ -64,7 +103,7 @@ fun ProductViewPresenter(modifier: Modifier = Modifier) {
 
 
 @Composable
-fun HorizontalPagerDemo(imageResources: List<Int> = emptyList()) {
+fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
     val pagerState = rememberPagerState(pageCount = {imageResources.size})
     val coroutineScope = rememberCoroutineScope()
     val pagerIsDragged  = pagerState.interactionSource.collectIsDraggedAsState()
@@ -80,7 +119,7 @@ fun HorizontalPagerDemo(imageResources: List<Int> = emptyList()) {
         LaunchedEffect(pagerState, pageInteractionSource) {
             while (true) {
                 delay(4000)
-                val nextPage = (pagerState.currentPage + 1) % imageResources.size
+                val nextPage = (pagerState.currentPage + 1) % if (imageResources.isEmpty()) 1 else imageResources.size
                 pagerState.animateScrollToPage(nextPage, animationSpec = tween(durationMillis = 1000))
             }
         }
@@ -111,7 +150,7 @@ fun HorizontalPagerDemo(imageResources: List<Int> = emptyList()) {
                 modifier = Modifier.fillMaxHeight(scale)
             ){
                 Image(
-                    painter = painterResource(imageResources[page]),
+                    painter = rememberAsyncImagePainter(imageResources[page]),
                     contentDescription = "Preview ${page + 1}",
                     contentScale = ContentScale.FillHeight,
                     modifier = Modifier
@@ -188,5 +227,5 @@ private fun Preview() {
         R.drawable.watch_hermes_ultra_digitalmat_gallery_3_202409,
         R.drawable.watch_hermes_ultra_digitalmat_gallery_4_202409,
         R.drawable.watch_hermes_ultra_digitalmat_gallery_5_202409)
-    HorizontalPagerDemo(imageResources = imageResources)
+   // HorizontalPagerDemo(imageResources = imageResources)
 }

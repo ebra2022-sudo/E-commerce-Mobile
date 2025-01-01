@@ -31,6 +31,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -52,38 +53,48 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
-import com.example.e_commerce_mobile.screens.app_main.home.ProductOverviewCardHorizontal
-import com.example.e_commerce_mobile.screens.app_main.home.ProductOverviewCardVertical
-import com.example.e_commerce_mobile.screens.app_main.home.VerticalLazyGridWithKItemsPerScreen
-import com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching.Product
+import com.example.e_commerce_mobile.presentation.navigation.Screens
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardHorizontal
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardVertical
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.VerticalLazyGridWithKItemsPerScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.Product
+import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SubCategoryProductsOverviewScreen(
-    modifier: Modifier = Modifier,
-    mainCategory: String,
-    subCategory: String,
+    viewModel: ProductViewModel = hiltViewModel(),
+    subCategoryId: Int,
     navController: NavController = NavController(LocalContext.current),
-    allProducts: List<Product> = emptyList()
+
 ) {
+    viewModel.fetchSubSubCategories(subCategoryId)
+    viewModel.getCurrentSubCategory(subCategoryId)
+    viewModel.fetchProducts(subCategoryId)
+    Log.d("SubCategoryProductsOverviewScreen", "subCategoryId: $subCategoryId")
+    Log.d("SubCategoryProductsOverviewScreen", "subSubCategories: ${viewModel.subSubCategories.collectAsState().value}")
+    val subSubCategories = viewModel.subSubCategories.collectAsState().value
+    val subCategory = viewModel.currentSubCategory.collectAsState().value
+    val subSubCategory = viewModel.currentSubSubCategory.collectAsState().value
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val currentProducts = viewModel.currentProducts.collectAsState().value
     Scaffold(
         topBar = {
             MediumTopAppBar(
                 modifier = Modifier,
                 title = {
                     Text(
-                        text = subCategory, modifier = Modifier.fillMaxWidth(),
+                        text = subCategory?.name?:"Unknown", modifier = Modifier.fillMaxWidth(),
                         textAlign = if (scrollBehavior.state.collapsedFraction >= 0.75f) TextAlign.Center else TextAlign.Start,
                         fontSize = 30.sp,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_bold)))
 
                     )
                 },
-                // deisgn the sate
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.navigateUp()
@@ -114,15 +125,12 @@ fun SubCategoryProductsOverviewScreen(
             end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
             bottom = 0.dp
         )
-        val subSubCategoriesToCorrespondingProducts =
-            allProducts.filter { it.mainCategory == mainCategory && it.subCategory.title == subCategory }
-                .groupBy { it.subSubCategory }
-        val pagerState = rememberPagerState { subSubCategoriesToCorrespondingProducts.size }
+        val pagerState = rememberPagerState { subSubCategories.size }
         val coroutineScope = rememberCoroutineScope()
-        Log.d("mainCategory", mainCategory)
-        Log.d("subCategory", subCategory)
-        Log.d("subSubCategoriesToCorrespondingProducts length", subSubCategoriesToCorrespondingProducts.size.toString())
-        Log.d("allProducts", allProducts.size.toString())
+        Log.d("mainCategory", (subCategory?.mainCategoryId?:"Unknown").toString())
+        Log.d("subCategory", subCategory?.name?:"Unknown")
+        Log.d("subSubCategoriesToCorrespondingProducts length", subSubCategories.size.toString())
+        Log.d("allProducts", subSubCategories.size.toString())
         var gridView by rememberSaveable { mutableStateOf(false) }
 
         Column(modifier = Modifier.padding(adjustedPadding).background(Color.White)) {
@@ -138,7 +146,8 @@ fun SubCategoryProductsOverviewScreen(
                     },
                     divider = {}
                 ) {
-                    subSubCategoriesToCorrespondingProducts.keys.forEachIndexed { index, subSubCategory ->
+
+                    subSubCategories.map { it.name }.forEachIndexed { index, subSubCategory ->
                         Tab(
                             selected = pagerState.currentPage == index,
                             onClick = {
@@ -162,7 +171,7 @@ fun SubCategoryProductsOverviewScreen(
                                 ) {
                                     Text(
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                        text = subSubCategory,
+                                        text = subSubCategories[index].name,
                                         fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.W300,
                                         fontSize = 20.sp,
                                         color = Color.White,
@@ -186,24 +195,41 @@ fun SubCategoryProductsOverviewScreen(
                 state = pagerState,
                 // Take up remaining space
             ) { page ->
-                val products = subSubCategoriesToCorrespondingProducts.values.toList()[page]
-                val productOverviews = List(products.size) { index ->
+                val productOverviews = currentProducts.map{ product ->
                     @Composable { width: Int ->
+                        viewModel.getCurrentSubSubCategory(product.subSubCategory)
                         if (gridView) {
                             ProductOverviewCardHorizontal(
+                                productName = product.name,
+                                subSubCategory = subSubCategory?.name?:"Unknown",
                                 isNew = false,
-                                discountPercent =10,
-                                price = 1300.0,
-                                rating = 4.3f
-                            )
+                                isLiked = product.isLiked,
+                                discountPercent = product.discount.toInt(),
+                                price = product.price.toDouble(),
+                                rating = product.userRating.toFloat(),
+                                productImage = product.productImageUrl?:"",
+                                onFavorite = { viewModel.onLike(product.id) }
+                            ) {
+                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                            }
                         }
                         else {
                             ProductOverviewCardVertical(
+                                productName = product.name,
+                                subSubCategory = subSubCategory?.name?:"Unknown",
                                 width = width,
+                                isLiked = product.isLiked,
                                 isNew = false,
-                                discountPercent =10,
-                                price = 1300.0,
-                                rating = 4.3f)
+                                discountPercent =product.discount.toInt(),
+                                price = product.price.toDouble(),
+                                rating =product.userRating.toFloat(),
+                                productImage = product.productImageUrl?:"",
+                                onFavorite = {
+                                    viewModel.onLike(product.id)
+                                    viewModel.fetchProducts(subCategoryId)}
+                            ){
+                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                            }
                         }
                     }
                 }
@@ -233,12 +259,11 @@ fun ControlTextButtons(currentSortType: String = "Price: lowest to high", curren
             Row(modifier = Modifier.clickable(onClick = onCollapseClick)) {
                 Icon(painter = painterResource(currentViewIcon), contentDescription = "Collapse icon")
             }
-
         }
-
         HorizontalDivider(thickness = 1.dp, color = Color(0xFF222222), modifier = Modifier.fillMaxWidth().shadow(elevation = 5.dp))
     }
 }
+
 
 
 

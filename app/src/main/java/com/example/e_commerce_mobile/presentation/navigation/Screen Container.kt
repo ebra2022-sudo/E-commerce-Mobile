@@ -42,6 +42,7 @@ import com.example.e_commerce_mobile.presentation.ui.screens.app_main.profile.Pr
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.Product
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.SubcategoryItem
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.ProductDetailScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.SubCategoryProductsOverviewScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.auth.LogInScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.auth.PasswordResetScreen
@@ -51,7 +52,7 @@ import com.example.e_commerce_mobile.presentation.ui.screens.auth.SignUpScreen
 @Composable
 fun ScreenContainer(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
-    val isAuthenticated = false // Replace with actual authentication logic
+    val isAuthenticated = true // Replace with actual authentication logic
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
     Log.d("currentRoute", currentRoute.toString())
@@ -687,31 +688,34 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
                 navigation(startDestination = Screens.CategoryAndSearchScreen.route, route = Screens.ProductBrowsingAndSearching.route) {
                     composable(Screens.CategoryAndSearchScreen.route) {
                         CategoryAndSearchScreen(
-                            navController = navController,
-                            allProducts = allProducts
+                            navController = navController
                         )
                     }
                 }
                 navigation(startDestination = Screens.SubCategoryProductsOverviewScreen.route, route = Screens.ProductDisplayAndInformation.route) {
                     composable(
-                        route = Screens.SubCategoryProductsOverviewScreen.withArgs("{mainCategory}/{subCategoryTitle}"),
+                        route = Screens.SubCategoryProductsOverviewScreen.withArgs("{subCategoryId}"),
                         arguments = listOf(
-                            navArgument("mainCategory") { type = NavType.StringType },
-                            navArgument("subCategoryTitle") { type = NavType.StringType }
+                            navArgument("subCategoryId") { type = NavType.StringType }
                         )
 
                     ) { backStackEntry ->
                         // Retrieve arguments safely
-                        val subCategoryTitle = backStackEntry.arguments?.getString("subCategoryTitle") ?: "Unknown"
-                        val mainCategory = backStackEntry.arguments?.getString("mainCategory") ?: "Unknown"
+                        val subCategoryId = backStackEntry.arguments?.getString("subCategoryId") ?: "12"
+
 
                         // Call the screen composable
                         SubCategoryProductsOverviewScreen(
                             navController = navController,
-                            mainCategory = mainCategory,
-                            subCategory = subCategoryTitle,
-                            allProducts = allProducts
+                            subCategoryId = subCategoryId.toInt()
                         )
+                    }
+                    composable(Screens.ProductDetailScreen.withArgs("{productId}"),
+                        arguments = listOf(
+                            navArgument("productId") { type = NavType.StringType }
+                        )){
+                        val productId = it.arguments?.getString("productId") ?: "3"
+                        ProductDetailScreen(navController = navController, productId = productId.toInt())
                     }
                 }
             }
@@ -796,7 +800,7 @@ fun shouldShowBottomNavigation(currentRoute: String?): Boolean {
     return currentRoute in listOf(
         Screens.HomeMainScreen.route,
         Screens.CategoryAndSearchScreen.route,
-        Screens.SubCategoryProductsOverviewScreen.withArgs("{mainCategory}/{subCategoryTitle}"),
+        Screens.SubCategoryProductsOverviewScreen.withArgs("{subCategoryId}"),
         Screens.BagMainScreen.route,
         Screens.FavoritesMainScreen.route,
         Screens.ProfileMainScreen.route

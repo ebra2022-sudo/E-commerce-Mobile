@@ -9,7 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.e_commerce_mobile.screens.auth.UserAccountManagementViewModel
+import com.example.e_commerce_mobile.presentation.ui.screens.auth.UserAccountManagementViewModel
 
 @Composable
 fun ProfileMainScreen(modifier: Modifier = Modifier, viewModel: UserAccountManagementViewModel = viewModel()) {

@@ -23,6 +23,7 @@ import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import retrofit2.create
 
 
 interface ApiService {
@@ -74,32 +75,6 @@ data class UserRegisterResponseWithMessage(
 
 
 
-class BaseUrlInterceptor : Interceptor {
-    @Volatile
-    private var baseUrl: HttpUrl? = null
-
-    fun setBaseUrl(newBaseUrl: String) {
-        this.baseUrl = HttpUrl.get(newBaseUrl)
-    }
-
-    override fun intercept(chain: Interceptor.Chain): okhttp3.Response {
-        val originalRequest: Request = chain.request()
-        val currentBaseUrl = baseUrl ?: return chain.proceed(originalRequest)
-
-        // Replace the base URL in the original request
-        val newUrl = originalRequest.url().newBuilder()
-            .scheme(currentBaseUrl.scheme())
-            .host(currentBaseUrl.host())
-            .port(currentBaseUrl.port())
-            .build()
-
-        val newRequest = originalRequest.newBuilder()
-            .url(newUrl)
-            .build()
-
-        return chain.proceed(newRequest)
-    }
-}
 
 
 
@@ -135,27 +110,16 @@ class UserAccountManagementViewModel: ViewModel() {
 
 
 
-    private val baseUrlInterceptor = BaseUrlInterceptor()
 
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://default.base.url/") // Default base URL
-        .client(
-            OkHttpClient.Builder()
-                .addInterceptor(baseUrlInterceptor)
-                .build()
-        )
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
 
     // Function to update the base URL
-    fun updateBaseUrl() {
-        baseUrlInterceptor.setBaseUrl("http://$logInIp:8000/")
-    }
+
 
     // Example API interface
-    fun getApiService(): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
+    val retrofit = Retrofit.Builder()
+        .baseUrl("http://192.168.200.23:8000/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build().create(ApiService::class.java)
 
     fun registerUser() {
         val user = UserRegisterForm(
@@ -169,7 +133,7 @@ class UserAccountManagementViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 // Make the network call directly using the ApiService
-                val response: Response<UserRegisterResponseWithMessage> = getApiService().registerUser(user)
+                val response: Response<UserRegisterResponseWithMessage> = retrofit.registerUser(user)
 
                 // Check if the response is successful
                 if (response.isSuccessful) {
@@ -193,6 +157,7 @@ class UserAccountManagementViewModel: ViewModel() {
         }
     }
 
+
     fun loginUser() {
         val user = UserLoginForm(
             email = logInEmail,
@@ -202,7 +167,7 @@ class UserAccountManagementViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 // Make the network call directly using the ApiService
-                val response: Response<UserLoginResponseWithMessage> = getApiService().loginUser(user)
+                val response: Response<UserLoginResponseWithMessage> = retrofit.loginUser(user)
                 if (response.isSuccessful) {
                     val result = response.body()
                     // Handle successful registration

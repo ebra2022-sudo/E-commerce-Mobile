@@ -1,5 +1,6 @@
 package com.example.e_commerce_mobile
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,29 +13,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import com.example.e_commerce_mobile.screens.ScreenContainer
-import com.example.e_commerce_mobile.screens.app_main.home.HomeMainScreen
-import com.example.e_commerce_mobile.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
-import com.example.e_commerce_mobile.ui.theme.EcommerceMobileTheme
+import com.example.e_commerce_mobile.presentation.navigation.ScreenContainer
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.HomeMainScreen
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
+import com.example.e_commerce_mobile.presentation.ui.theme.EcommerceMobileTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-
+        enableEdgeToEdge()
         setContent {
-            val systemUiController = rememberSystemUiController()
 
-
-            // Update the status bar color dynamically
-            SideEffect {
-                systemUiController.setSystemBarsColor(
-                    color = Color.White
-                )
-            }
 
             ScreenContainer()
                 //HomeMainScreen()
@@ -43,6 +39,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+@HiltAndroidApp
+class MyApplication : Application() {
+}
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

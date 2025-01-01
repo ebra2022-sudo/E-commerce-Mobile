@@ -69,9 +69,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
-import com.example.e_commerce_mobile.screens.app_main.home.CustomImageWithFavoriteCircle
-import com.example.e_commerce_mobile.screens.app_main.home.StarRating
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -242,13 +241,16 @@ fun VerticalLazyGridWithKItemsPerScreen(
 
 @Composable
 fun ProductOverviewCardVertical(
+    productName: String = "",
+    subSubCategory: String = "",
     width: Int,
     isNew: Boolean = false,
     discountPercent: Int = 5,
-    onFavorite: (Boolean) -> Unit = {},
-    productImage: Int = R.drawable.watch_hermes_ultra_digitalmat_gallery_1_202409,
+    onFavorite: () -> Unit = {},
+    productImage: String = "",
     rating: Float = 4.9f,
     price: Double = 1399.0,
+    isLiked: Boolean = false,
     onProductOverviewClick: () -> Unit = {}) {
     Column (modifier = Modifier
         .shadow(elevation = 8.dp, shape = RoundedCornerShape(5.dp), spotColor = Color(0xFF9B9B9B))
@@ -264,11 +266,12 @@ fun ProductOverviewCardVertical(
             onFavorite = onFavorite,
             discountPercent = discountPercent,
             productImage = productImage,
+            isLiked = isLiked
         )
         Column(modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween) {
             StarRating(rating = rating)
-            Text(text = "Smart watch",
+            Text(text = subSubCategory,
                 style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)),
                     fontSize = 10.sp),
                 fontWeight = FontWeight.W300,
@@ -278,7 +281,7 @@ fun ProductOverviewCardVertical(
                 verticalArrangement = Arrangement.Bottom,
             ) {
                 Text(
-                    text = "Apple Watch Hermès Ultra 2",
+                    text = productName,
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.metropolis_medium)),
                         fontSize = 15.sp
@@ -304,7 +307,6 @@ fun ProductOverviewCardVertical(
                                 append("$price\$")
                             }
                         }
-
                     },
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.metropolis_medium)),
@@ -327,14 +329,16 @@ fun ProductOverviewCardVertical(
 
 @Composable
 fun ProductOverviewCardHorizontal(
+    productName: String = "",
+    subSubCategory: String = "",
     isNew: Boolean = true,
     discountPercent: Int = 5,
-    onFavorite: (Boolean) -> Unit = {},
-    productImage: Int = R.drawable.watch_hermes_ultra_digitalmat_gallery_1_202409,
+    isLiked: Boolean = false,
+    onFavorite: () -> Unit = {},
+    productImage: String = "",
     rating: Float = 4.9f,
     price: Double = 1399.0,
     onProductOverviewClick: () -> Unit = {}){
-    var isFavorite by rememberSaveable() { mutableStateOf(false) }
     Box(modifier = Modifier
         .fillMaxWidth()
         .height(155.dp)) {
@@ -356,7 +360,7 @@ fun ProductOverviewCardHorizontal(
         ) {
             Box {
                 Image(
-                    painter = painterResource(id = productImage),
+                    painter = rememberAsyncImagePainter(productImage),
                     contentDescription = "product image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -405,7 +409,7 @@ fun ProductOverviewCardHorizontal(
                     verticalArrangement = Arrangement.Bottom,
                 ) {
                     Text(
-                        text = "Apple Watch Hermès Ultra 2",
+                        text = productName,
                         style = TextStyle(
                             fontFamily = FontFamily(Font(R.font.metropolis_medium)),
                             fontSize = 15.sp
@@ -449,7 +453,7 @@ fun ProductOverviewCardHorizontal(
                 }
                 StarRating(rating = rating)
                 Text(
-                    text = "Smart watch",
+                    text = subSubCategory,
                     style = TextStyle(
                         fontFamily = FontFamily(Font(R.font.metropolis_medium)),
                         fontSize = 10.sp
@@ -465,28 +469,26 @@ fun ProductOverviewCardHorizontal(
             .size(40.dp)
             .shadow(elevation = 10.dp, shape = CircleShape)
             .align(Alignment.BottomEnd)
-            .clickable(onClick = {
-                isFavorite = !isFavorite
-                onFavorite(isFavorite)
-            }),
+            .clickable(onClick = onFavorite
+            ),
             color = Color.White,
         ) {
-            Icon(painter = painterResource(id = if (isFavorite) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
+            Icon(painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
 
         }
     }
 }
 
 @Composable
-fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : (Boolean) -> Unit = {},
+fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : () -> Unit = {},
                                   isNew: Boolean = false,
+                                  isLiked: Boolean,
                                   discountPercent: Int= 20,
-                                  productImage: Int
+                                  productImage: String
                                   ) {
     Box(modifier = modifier) {
-        var isFavorite by remember { mutableStateOf(false) }
         Image(
-            painter = painterResource(id = productImage),
+            painter = rememberAsyncImagePainter(productImage),
             contentDescription = "product image",
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -499,13 +501,11 @@ fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : (B
             .size(40.dp)
             .shadow(elevation = 10.dp, shape = CircleShape)
             .align(Alignment.BottomEnd)
-            .clickable(onClick = {
-                isFavorite = !isFavorite
-                onFavorite(isFavorite)
-            }),
+            .clickable(onClick = onFavorite
+            ),
             color = Color.White,
             ) {
-            Icon(painter = painterResource(id = if (isFavorite) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
+            Icon(painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
 
         }
 

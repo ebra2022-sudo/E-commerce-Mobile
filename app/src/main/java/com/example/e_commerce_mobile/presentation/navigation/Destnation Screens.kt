@@ -11,11 +11,11 @@ enum class Screens(val route: String) {
     HomeMainScreen("HomeMainScreen"),
 
     Shop("Shop"),
-    ShopMainScreen("ShopMainScreen"),
     ProductBrowsingAndSearching("ProductBrowsingAndSearching"),
     CategoryAndSearchScreen("CategoryAndSearchScreen"),
-    SubCategoryProductsOverviewScreen("SubCategoryProductsOverviewScreen/{mainCategory}/{subCategoryTitle}"),
+    SubCategoryProductsOverviewScreen("SubCategoryProductsOverviewScreen/{subCategoryId}"),
     ProductDisplayAndInformation("ProductDisplayAndReviewScreen"),
+    ProductDetailScreen("ProductDetailScreen/{productId}"),
 
     Bag("Bag"),
     BagMainScreen("BagMainScreen"),

@@ -133,7 +133,7 @@ fun LogInScreen(
                 ) {
                     Card(
                         modifier = Modifier
-                            .size(width = 100.dp, height = 64.dp).clickable(onClick = {viewModel.updateBaseUrl()})
+                            .size(width = 100.dp, height = 64.dp).clickable(onClick = {})
                             .shadow(
                                 elevation = 10.dp,
                                 shape = RoundedCornerShape(25.dp),

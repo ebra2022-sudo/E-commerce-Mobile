@@ -1,6 +1,6 @@
 package com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching
 
-import androidx.annotation.ColorRes
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -23,7 +23,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -35,7 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,17 +52,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
-import com.example.e_commerce_mobile.screens.Screens
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.example.e_commerce_mobile.data.local.MainCategory
+import com.example.e_commerce_mobile.presentation.navigation.Screens
+import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryAndSearchScreen(navController: NavController = NavController(context = LocalContext.current), allProducts: List<Product> = emptyList()) {
-
+fun CategoryAndSearchScreen(navController: NavController = NavController(context = LocalContext.current), viewModel: ProductViewModel = hiltViewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,7 +109,7 @@ fun CategoryAndSearchScreen(navController: NavController = NavController(context
             modifier = Modifier
                 .padding(adjustedPadding)
                 .fillMaxSize(),
-            allProducts = allProducts,
+            viewModel = viewModel,
             navController = navController
         )
     }
@@ -151,57 +154,63 @@ data class Product(
 @Composable
 fun MainCategoryNavigation(
     modifier: Modifier = Modifier,
-    allProducts: List<Product> = emptyList(),
+    viewModel: ProductViewModel,
     navController: NavController
 ) {
-    val mainCategories = allProducts.map { it.mainCategory }.distinct()
+    val mainCategories = viewModel.mainCategories.collectAsState().value
+    Log.d("MainCategoryNavigation", "mainCategories: $mainCategories")
     val pagerState = rememberPagerState { mainCategories.size }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier) {
         // Tab Row
-        ScrollableTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            edgePadding = 5.dp,
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
-                    color = Color(0xFFDB3022) // Custom color for the tab indicator
-                )
-            }
-        ) {
-            mainCategories.forEachIndexed { index, mainCategory ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(
-                                index,
-                                animationSpec = tween(durationMillis = 1000)
+        if (mainCategories.isNotEmpty()) {
+            ScrollableTabRow(
+                selectedTabIndex = pagerState.currentPage,
+                edgePadding = 5.dp,
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                        color = Color(0xFFDB3022) // Custom color for the tab indicator
+                    )
+                }
+            ) {
+                mainCategories.map { it.name }.forEachIndexed { index, mainCategory ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    index,
+                                    animationSpec = tween(durationMillis = 1000)
+                                )
+                            }
+                        },
+                        text = {
+                            Text(
+                                text = mainCategory,
+                                fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.W300,
+                                fontSize = 18.sp,
+                                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
                             )
-                        }
-                    },
-                    text = {
-                        Text(
-                            text = mainCategory,
-                            fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.W300,
-                            fontSize = 18.sp,
-                            style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
-                        )
-                    },
-                    selectedContentColor = Color(0xFF222222),
-                )
+                        },
+                        selectedContentColor = Color(0xFF222222),
+                    )
+                }
+            }
+
+            // Horizontal Pager for swiping between tabs
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f) // Take up remaining space
+            ) { page ->
+                viewModel.fetchSubCategories(mainCategories[pagerState.currentPage].id)
+                SubcategoryContentScreen(viewModel = viewModel, navController = navController)
             }
         }
 
-        // Horizontal Pager for swiping between tabs
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.weight(1f) // Take up remaining space
-        ) { page ->
-            SubcategoryContentScreen(mainCategory = mainCategories[page], allProducts = allProducts, navController = navController)
         }
-    }
+
 }
 
 
@@ -216,26 +225,30 @@ fun SubcategoryContentScreen(
     modifier: Modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 16.dp),
-    mainCategory: String,
-    allProducts: List<Product> = emptyList(),
+    viewModel: ProductViewModel,
     navController: NavController,
     subCategoryAd: @Composable () -> Unit = { SubcategoryAdCard() }
 ) {
-    val subcategories = allProducts.filter { it.mainCategory == mainCategory }.map { it.subCategory }.distinct()
+    val subCategories = viewModel.subCategories.collectAsState().value
+
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Spacer(Modifier.height(16.dp))
             subCategoryAd()
         }
-        items(subcategories) { subCategory ->
+        items(subCategories) { subCategory ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .clickable(onClick = {
-                        val mainCategory = mainCategory
-                        val subCategoryTitle = subCategory.title
-                        navController.navigate(Screens.SubCategoryProductsOverviewScreen.withArgs(mainCategory, subCategoryTitle))  }),
+                        val subCategoryId = subCategory.id
+                        navController.navigate(Screens.SubCategoryProductsOverviewScreen.withArgs(
+                            subCategoryId.toString()
+                        ))
+                        Log.d("SubcategoryContentScreen", "Subcategory clicked: $subCategory")
+                    }),
+
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White,
                     contentColor = Color.Black
@@ -247,26 +260,28 @@ fun SubcategoryContentScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = subCategory.title,
+                        text = subCategory.name,
                         modifier = Modifier.fillMaxWidth(0.5f),
                         textAlign = TextAlign.Center,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium))),
                         fontWeight = FontWeight.W600,
                         fontSize = 18.sp
                     )
+
                     Image(
-                        painter = painterResource(subCategory.imageId),
+                        painter = rememberAsyncImagePainter(model = subCategory.image),
                         contentDescription = "subcategory image",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
             }
-
         }
-
     }
 }
+
+
+
 
 
 
@@ -277,7 +292,7 @@ fun SubcategoryContentScreen(
 @Preview
 @Composable
 private fun Preview() {
-    CategoryAndSearchScreen()
+  //  CategoryAndSearchScreen()
 
 
 }

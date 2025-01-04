@@ -1,34 +1,43 @@
 package com.example.e_commerce_mobile.data.remote
 import com.google.gson.annotations.SerializedName
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Singleton
+
+
+// auth - models
+
+data class UserLoginForm(
+    val email: String,
+    val password: String
+)
+
+data class UserLoginResponseWithMessage(
+    @SerializedName("status_message") val statusMessage: String,
+    @SerializedName("access_token") val accessToken: String,
+)
+
+data class UserRegisterForm(
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String,
+    val email: String,
+    @SerializedName("phone_number") val phoneNumber: String,
+    val password: String
+)
+
+data class UserRegisterResponse(
+    val id: String,
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String,
+    val email: String,
+    @SerializedName("phone_number") val phoneNumber: String,
+)
+
+data class UserRegisterResponseWithMessage(
+    @SerializedName("status_message") val statusMessage: String,
+    val user: UserRegisterResponse
+)
 
 
 
-//
-//@Entity(tableName = "products")
-//data class Product(
-//    @PrimaryKey val id: Int,
-//    val name: String,
-//    val price: Double,
-//    val discount: Double,
-//    val mainCategoryId: Int, // Foreign key reference to MainCategory
-//    val subCategoryId: Int, // Foreign key reference to SubCategory
-//    val subSubCategoryId: Int, // Foreign key reference to SubSubCategory
-//    val userRating: Double,
-//    val glbFileUrl: String,
-//    val productImageUrl: String,
-//    val postedAt: String,
-//    val updatedAt: String,
-//
-//)
-
-
+// product-Repository
 
 data class ProductResponse(
     val id: Int,
@@ -36,7 +45,7 @@ data class ProductResponse(
     val name: String,
     val price: String,
     val discount: Double,
-    val specifications: List<ProductDescription>,
+    val specifications: List<ProductSpec>,
     @SerializedName("is_liked") val isLiked: Boolean,
     @SerializedName("user_rating") val userRating: Double,
     @SerializedName("glb_file")val glbFile: String?,
@@ -56,11 +65,17 @@ data class ProductImage(
 
 
 
-data class ProductDescription(
+data class ProductSpec(
     val id: Int,
     val key: String,
     val description: String,
     val product: Int
+)
+
+data class BannerResponse(
+    val id: Int,
+    @SerializedName("ad_title") val adTitle: String,
+    @SerializedName("ad_image") val adImage: String
 )
 
 
@@ -87,22 +102,6 @@ data class SubSubCategoryResponse(
 
 
 
-
-@Module
-@InstallIn(SingletonComponent::class)
-object NetworkModule {
-
-    private const val BASE_URL = "http://192.168.31.240:8000/"
-
-    @Singleton
-    @Provides
-    fun provideProductApiService(): ProductApiService {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build().create(ProductApiService::class.java)
-    }
-}
 
 
 

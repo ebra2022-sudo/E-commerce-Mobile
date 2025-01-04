@@ -1,5 +1,6 @@
 package com.example.e_commerce_mobile.presentation.viewmodel
 
+import android.accounts.NetworkErrorException
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,52 +10,49 @@ import com.example.e_commerce_mobile.data.local.SubCategory
 import com.example.e_commerce_mobile.data.local.SubCategoryDao
 import com.example.e_commerce_mobile.data.local.SubSubCategory
 import com.example.e_commerce_mobile.data.local.SubSubCategoryDao
+import com.example.e_commerce_mobile.data.remote.BannerResponse
 import com.example.e_commerce_mobile.data.remote.ProductResponse
-import com.example.e_commerce_mobile.domain.repositories.ProductRepository
+import com.example.e_commerce_mobile.data.repositories.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val productRepository: ProductRepository,
-    private val mainCategoryDao: MainCategoryDao,
-    private val subCategoryDao: SubCategoryDao,
-    private val subSubCategoryDao: SubSubCategoryDao
 ) : ViewModel() {
     init {
-        viewModelScope.launch {
-            // Fetch and cache product hierarchy
-            fetchAndCacheProductHierarchy()
-            // Collect data from the Flow
-            mainCategoryDao.getAll().collect { categories ->
-                _mainCategories.value = categories
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.fetchAndCacheProductHierarchy()
+            productRepository.fetchMainCategories().collect {
+                _mainCategories.value = it
             }
         }
     }
 
+
+
     private val _mainCategories = MutableStateFlow<List<MainCategory>>(emptyList())
     val mainCategories: StateFlow<List<MainCategory>> = _mainCategories
-
     private val _currentSubCategory = MutableStateFlow<SubCategory?>(null)
     val currentSubCategory: StateFlow<SubCategory?> = _currentSubCategory
 
     private val _currentProducts = MutableStateFlow<List<ProductResponse>>(emptyList())
     val currentProducts: StateFlow<List<ProductResponse>> = _currentProducts
 
-
     private val _currentProduct = MutableStateFlow<ProductResponse?>(null)
     val currentProduct: StateFlow<ProductResponse?> = _currentProduct
-
-
-    // ViewModel implementation
 
     private val _subCategories = MutableStateFlow<List<SubCategory>>(emptyList())
     val subCategories: StateFlow<List<SubCategory>> = _subCategories
 
-
+    private val _banners = MutableStateFlow<List<BannerResponse>>(emptyList())
+    val banners: StateFlow<List<BannerResponse>> = _banners
 
     private val _subSubCategories = MutableStateFlow<List<SubSubCategory>>(emptyList())
     val subSubCategories: StateFlow<List<SubSubCategory>> = _subSubCategories
@@ -62,10 +60,21 @@ class ProductViewModel @Inject constructor(
     private val _currentSubSubCategory = MutableStateFlow<SubSubCategory?>(null)
     val currentSubSubCategory: StateFlow<SubSubCategory?> = _currentSubSubCategory
 
-    // Function to fetch and observe subcategories
+    fun fetchBanners() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _banners.value = productRepository.fetchBanners()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.d("Fetch banners", e.message.toString())
+                }
+            }
+        }
+    }
+
     fun fetchSubCategories(mainCategoryId: Int) {
         viewModelScope.launch {
-            subCategoryDao.getByMainCategoryId(mainCategoryId)
+            productRepository.fetchSubCategories(mainCategoryId)
                 .collect { list ->
                     _subCategories.value = list
                 }
@@ -74,53 +83,77 @@ class ProductViewModel @Inject constructor(
 
 
     fun fetchProducts(subCategoryId: Int) {
-        viewModelScope.launch {
-            _currentProducts.value = productRepository.apiService.getProducts(subCategoryId)
-
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _currentProducts.value = productRepository.getProducts(subCategoryId)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.d("Fetch products", e.message.toString())
+                }
+            }
         }
     }
 
-
-    // Function to fetch and observe sub-subcategories
     fun fetchSubSubCategories(subCategoryId: Int) {
-        viewModelScope.launch {
-            subSubCategoryDao.getBySubCategoryId(subCategoryId)
-                .collect { list ->
+        viewModelScope.launch(Dispatchers.IO) {
+            productRepository.fetchSubSubCategories(subCategoryId).collect { list ->
+                withContext(Dispatchers.Main) {
                     _subSubCategories.value = list
                 }
+            }
         }
     }
 
     fun getCurrentSubCategory(subCategoryId: Int) {
-        viewModelScope.launch {
-            _currentSubCategory.value = subCategoryDao.getById(subCategoryId)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _currentSubCategory.value = productRepository.getCurrentSubCategory(subCategoryId)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.d("Get current sub category", e.message.toString())
+                }
+            }
         }
     }
 
     fun getCurrentSubSubCategory(subSubCategoryId: Int) {
-        viewModelScope.launch {
-            _currentSubSubCategory.value = subSubCategoryDao.getById(subSubCategoryId)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _currentSubSubCategory.value = productRepository.getCurrentSubSubCategory(subSubCategoryId)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.d("Get current sub sub category", e.message.toString())
+                }
+            }
         }
     }
 
-    // Function to fetch and cache product hierarchy
-    fun fetchAndCacheProductHierarchy() {
-        viewModelScope.launch {
-            productRepository.fetchAndCacheProductHierarchy()
-        }
-    }
+
 
     fun onLike(productId: Int) {
-
-        viewModelScope.launch {
-            productRepository.apiService.likeProduct(productId)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                productRepository.onLikeProduct(productId)
+            } catch (e: NetworkErrorException) {
+                withContext(Dispatchers.Main) {
+                    Log.d("OnLike", e.message.toString())
+                }
+            }
         }
     }
 
     fun getCurrentProduct(productId: Int) {
-        viewModelScope.launch {
-            _currentProduct.value = productRepository.apiService.getProductDetails(productId)
-            Log.d("currentProduct", _currentProduct.value.toString())
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _currentProduct.value = productRepository.getProductDetails(productId)
+                withContext(Dispatchers.Main) {
+                    Log.d("currentProduct", _currentProduct.value.toString())
+                }
+            } catch (e: NetworkErrorException) {
+                withContext(Dispatchers.Main) {
+                    Log.d("Get current product", e.message.toString())
+                }
+            }
         }
     }
 }

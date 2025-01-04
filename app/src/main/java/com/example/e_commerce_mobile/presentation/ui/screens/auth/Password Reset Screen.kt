@@ -30,14 +30,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.presentation.viewmodel.UserAccountManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordResetScreen(
-    viewModel: UserAccountManagementViewModel = viewModel(),
+    viewModel: UserAccountManagementViewModel = hiltViewModel(),
     navController: NavController = NavController(context = LocalContext.current)
 ) {
     Scaffold(

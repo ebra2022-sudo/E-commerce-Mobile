@@ -30,6 +30,7 @@ data class SubCategory(
     val mainCategoryId: Int
 )
 
+
 @Entity(
     tableName = "sub_sub_categories",
     foreignKeys = [

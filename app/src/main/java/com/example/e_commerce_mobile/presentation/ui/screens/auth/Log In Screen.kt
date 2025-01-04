@@ -42,15 +42,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
 import com.example.e_commerce_mobile.presentation.navigation.Screens
+import com.example.e_commerce_mobile.presentation.viewmodel.UserAccountManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogInScreen(
-    viewModel: UserAccountManagementViewModel = viewModel(),
+    viewModel: UserAccountManagementViewModel = hiltViewModel(),
     navController: NavController = NavController(context = LocalContext.current)
 ) {
     Scaffold(
@@ -59,11 +61,12 @@ fun LogInScreen(
 
     ) {
         val loginStatus = viewModel.loginStatus.collectAsState().value
-        if (loginStatus == "Login successful") {
-            LaunchedEffect(Unit) {
-                navController.navigate(Screens.Home.route)
-            }
+        if (loginStatus) {
+            navController.navigate(Screens.Home.route)
         }
+
+
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,10 +83,9 @@ fun LogInScreen(
                     .padding(bottom = 16.dp),
                 email = viewModel.logInEmail,
                 password = viewModel.logInPassword,
-                ip = viewModel.logInIp,
                 onEmailChange = viewModel.onLogInEmailChange,
-                onPasswordChange = viewModel.onLogInPasswordChange,
-                onIpChange = viewModel.onLogInIpChange)
+                onPasswordChange = viewModel.onLogInPasswordChange
+            )
             Row(
                 modifier = Modifier.align(Alignment.End).clickable(onClick = {navController.navigate(Screens.PasswordResetScreen.route)}),
                 verticalAlignment = Alignment.CenterVertically
@@ -221,10 +223,9 @@ fun LogInScreen(
 fun FormLogIn(modifier: Modifier = Modifier,
               email:String = "",
               password:String = "",
-              ip:String = "",
               onEmailChange: (String) -> Unit = {},
-              onPasswordChange: (String) -> Unit = {},
-              onIpChange: (String) -> Unit = {}) {
+              onPasswordChange: (String) -> Unit = {}
+) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(15.dp)) {
         TextField(
             value = email,
@@ -277,31 +278,6 @@ fun FormLogIn(modifier: Modifier = Modifier,
         )
     }
 
-    TextField(
-        value = ip,
-        onValueChange = {onIpChange(it)},
-        label = {
-            Text(
-                "Ip Address",
-                color = Color(0xFF9B9B9B),
-                fontSize = 15.sp,
-                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
-            )
-
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(74.dp)
-            .shadow(
-                elevation = 10.dp, shape = RoundedCornerShape(10.dp), spotColor = Color(0xFF9B9B9B)
-            ),
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = Color.White,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(10.dp)
-    )
 }
 
 @Preview

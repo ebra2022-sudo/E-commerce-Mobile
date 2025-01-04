@@ -22,10 +22,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -37,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,15 +50,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.room.util.TableInfo
 import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.data.remote.ProductSpec
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.nio.file.WatchEvent
 import kotlin.math.abs
 
 @Composable
@@ -80,19 +91,12 @@ fun ProductDetailScreen(modifier: Modifier = Modifier,
             // Display the product details
             Column(modifier = Modifier.fillMaxSize()) {
                 HorizontalPagerDemo(imageResources = product!!.images.map { it.image?:""})
-                Text(text = product.name)
-                Text(text = product.price.toString())
-                Text(text = product.discount.toString())
-                Text(text = product.userRating.toString())
-                Text(text = product.isLiked.toString())
+                SpecElement(specs = product.specifications)
 
 
             }
         }
-
     }
-
-    
 }
 
 @Composable
@@ -124,7 +128,9 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
             }
         }
     }
-    Box(modifier = Modifier.fillMaxWidth().height(250.dp)) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(250.dp)) {
         HorizontalPager( // Number of pages
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -152,7 +158,7 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
                 Image(
                     painter = rememberAsyncImagePainter(imageResources[page]),
                     contentDescription = "Preview ${page + 1}",
-                    contentScale = ContentScale.FillHeight,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
                 )
@@ -161,7 +167,8 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
 
         // Pager Indicators
         Row(
-            Modifier.align(alignment = Alignment.BottomCenter)
+            Modifier
+                .align(alignment = Alignment.BottomCenter)
                 .wrapContentHeight()
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
@@ -179,7 +186,9 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
                 )
             }
         }
-        Row(modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.Center),
             horizontalArrangement = Arrangement.SpaceBetween) {
             IconButton(onClick = {
                 coroutineScope.launch {
@@ -212,8 +221,32 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList()) {
             }
         }
         Icon(painter = painterResource(R.drawable.auto_rotate), contentDescription = "icon", tint = if (autoRotate) Color.DarkGray else Color.LightGray ,
-            modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).clickable(onClick = {autoRotate = !autoRotate}))
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp)
+                .clickable(onClick = { autoRotate = !autoRotate }))
 
+    }
+}
+
+@Composable
+fun SpecElement(modifier: Modifier = Modifier,specs: List<ProductSpec>) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(15.dp)) {
+        specs.forEach {
+            SpecSection(key = it.key, description = it.description)
+        }
+    }
+}
+
+
+@Composable
+fun SpecSection(modifier: Modifier = Modifier, key: String, description: String) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
+        Text(text = key, fontSize = 25.sp, fontWeight = FontWeight.SemiBold)
+        HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 2.dp)
+        Text(text = description, textAlign = TextAlign.Justify)
     }
 }
 

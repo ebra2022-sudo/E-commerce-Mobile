@@ -1,6 +1,7 @@
 package com.example.e_commerce_mobile.presentation.ui.screens.app_main.home
 
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,40 +70,40 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.data.remote.BannerResponse
+import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 @Composable
 fun HomeMainScreen(
     modifier: Modifier = Modifier,
-    navController: NavController = NavController(context = LocalContext.current)
+    navController: NavController = NavController(context = LocalContext.current),
+    viewModel: ProductViewModel = hiltViewModel()
 ) {
+    viewModel.fetchBanners()
+    val banners by viewModel.banners.collectAsState()
+    Log.d("banners", banners.toString())
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        AdCardDisplay(
-            imageResourceWithDescription =
-            listOf(
-                Pair(R.drawable.ad_1, "Latest Devices"),
-                Pair(R.drawable.ad_2, "Galaxy Smart"),
-                Pair(R.drawable.ad_3, "Negotiable Prices"),
-                Pair(R.drawable.ad_4, "Luxury Cars"),
-                Pair(R.drawable.ad_5, "Smart Watches"),
-                Pair(R.drawable.ad_6, "Brand Shoes"),
-                Pair(R.drawable.ad_7, "Smart Home Appliances")
-            )
-        )
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(5.dp)
         ) {
+            if (banners.isNotEmpty()) {
+                AdCardDisplay(imageResourceWithDescription = banners)
+            }
+            //  ahte  aht
+
             // Sale Section
             SectionHeader(title = "Sale", subtitle = "Super summer sale")
             val productsSale = List(6) { index ->
@@ -160,13 +162,14 @@ fun HomeMainScreen(
             }
 
             LazyRowWithKItemsPerScreen(
-                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 4, // Number of items per screen
+                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3, // Number of items per screen
                 spacer = 16, // Space between items
                 items = productsRecommended
             )
         }
     }
 }
+
 
 
 @Composable
@@ -213,7 +216,6 @@ fun LazyRowWithKItemsPerScreen(
     }
 }
 
-
 @Composable
 fun VerticalLazyGridWithKItemsPerScreen(
     modifier: Modifier = Modifier,
@@ -225,6 +227,7 @@ fun VerticalLazyGridWithKItemsPerScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
     val itemWidth = (screenWidth - ((k - 1) * spacer)) / k
+    // the same the
     LazyVerticalGrid(
         modifier = modifier.nestedScroll(nestedScrollConnection),
         columns = GridCells.Fixed(k),
@@ -268,6 +271,7 @@ fun ProductOverviewCardVertical(
             productImage = productImage,
             isLiked = isLiked
         )
+
         Column(modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween) {
             StarRating(rating = rating)
@@ -321,9 +325,7 @@ fun ProductOverviewCardVertical(
 
 
         }
-
     }
-    
 }
 
 
@@ -373,6 +375,8 @@ fun ProductOverviewCardHorizontal(
                             shape = RoundedCornerShape(10.dp)
                         )
                 )
+
+
                 if (isNew) {
                     Surface(modifier = Modifier
                         .padding(5.dp)
@@ -462,7 +466,6 @@ fun ProductOverviewCardHorizontal(
                     color = Color(0xFF9B9B9B),
                     modifier = Modifier.padding(top = 5.dp)
                 )
-
             }
         }
         Surface(modifier = Modifier
@@ -540,13 +543,13 @@ fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : ()
 }
 
 @Composable
-fun AdCard(modifier: Modifier = Modifier, imageResource: Int, description: String = "" ) {
+fun AdCard(modifier: Modifier = Modifier, imageResource: String, description: String = "" ) {
     Card(modifier = modifier
         .fillMaxWidth()
         .height(250.dp),
         shape = RoundedCornerShape(0.dp)) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Image(modifier = Modifier.fillMaxSize(), painter = painterResource(imageResource), contentScale = ContentScale.FillBounds, contentDescription = "ad image")
+            Image(modifier = Modifier.fillMaxSize(), painter = rememberAsyncImagePainter(imageResource), contentScale = ContentScale.FillBounds, contentDescription = "ad image")
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -573,7 +576,7 @@ fun AdCard(modifier: Modifier = Modifier, imageResource: Int, description: Strin
 
 
 @Composable
-fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: List<Pair<Int, String>>) {
+fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: List<BannerResponse>) {
     val pagerState = rememberPagerState {imageResourceWithDescription.size}
     val pagerIsDragged  = pagerState.interactionSource.collectIsDraggedAsState()
 
@@ -587,9 +590,9 @@ fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: L
     if (autoAdvance) {
         LaunchedEffect(pagerState, pageInteractionSource) {
             while (true) {
-                delay(4000)
-                val nextPage = (pagerState.currentPage + 1) % imageResourceWithDescription.size
-                pagerState.animateScrollToPage(nextPage, animationSpec = tween(durationMillis = 1000))
+                delay(3000)
+                val nextPage = (pagerState.currentPage + 1) % if (imageResourceWithDescription.isEmpty()) 1 else imageResourceWithDescription.size
+                pagerState.animateScrollToPage(nextPage, animationSpec = tween(durationMillis = 2000))
             }
         }
     }
@@ -597,7 +600,7 @@ fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: L
         state = pagerState,
         pageSpacing = 10.dp
     ) { page  ->
-        AdCard(imageResource = imageResourceWithDescription[page].first, description = imageResourceWithDescription[page].second)
+        AdCard(imageResource = imageResourceWithDescription[page].adImage, description = imageResourceWithDescription[page].adTitle)
     }
 }
 

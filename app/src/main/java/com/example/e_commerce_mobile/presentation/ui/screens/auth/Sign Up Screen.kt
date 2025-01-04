@@ -41,15 +41,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
 import com.example.e_commerce_mobile.presentation.navigation.Screens
+import com.example.e_commerce_mobile.presentation.viewmodel.UserAccountManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    viewModel: UserAccountManagementViewModel = viewModel(),
+    viewModel: UserAccountManagementViewModel = hiltViewModel(),
     navController: NavController = NavController(context = LocalContext.current)
 ) {
     Scaffold(
@@ -301,7 +303,7 @@ fun FormSignUp(modifier: Modifier = Modifier,
             onValueChange = {onEmailChange(it)},
             label = {
                     Text(
-                        "Phone Number",
+                        "Email",
                         color = Color(0xFF9B9B9B),
                         fontSize = 15.sp,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
@@ -326,7 +328,7 @@ fun FormSignUp(modifier: Modifier = Modifier,
             onValueChange = {onPhoneNumberChange(it)},
             label = {
                 Text(
-                    "Email",
+                    "Phone Number",
                     color = Color(0xFF9B9B9B),
                     fontSize = 15.sp,
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
@@ -372,12 +374,11 @@ fun FormSignUp(modifier: Modifier = Modifier,
             shape = RoundedCornerShape(10.dp)
         )
     }
-
 }
+
 
 @Preview(apiLevel = 35)
 @Composable
 private fun Preview() {
     SignUpScreen()
-
 }

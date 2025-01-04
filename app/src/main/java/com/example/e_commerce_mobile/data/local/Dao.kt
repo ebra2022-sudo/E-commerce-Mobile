@@ -5,9 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -69,7 +66,6 @@ interface SubCategoryDao {
 
 @Dao
 interface SubSubCategoryDao {
-
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(subSubCategory: SubSubCategory)

@@ -472,8 +472,7 @@ fun ProductOverviewCardHorizontal(
             .size(40.dp)
             .shadow(elevation = 10.dp, shape = CircleShape)
             .align(Alignment.BottomEnd)
-            .clickable(onClick = onFavorite
-            ),
+            .clickable(onClick = onFavorite),
             color = Color.White,
         ) {
             Icon(painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
@@ -504,8 +503,7 @@ fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : ()
             .size(40.dp)
             .shadow(elevation = 10.dp, shape = CircleShape)
             .align(Alignment.BottomEnd)
-            .clickable(onClick = onFavorite
-            ),
+            .clickable(onClick = onFavorite),
             color = Color.White,
             ) {
             Icon(painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))

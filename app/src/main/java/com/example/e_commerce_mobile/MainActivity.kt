@@ -1,6 +1,7 @@
 package com.example.e_commerce_mobile
 
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,19 +19,47 @@ import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.HomeM
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
 import com.example.e_commerce_mobile.presentation.ui.theme.EcommerceMobileTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.android.filament.utils.Utils
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.Manifest
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    companion object {
+        init {
+            Utils.init()
+        }
+        private val CAMERAX_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+        )
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
+
+        if (!hasRequiredPermissions()) {
+            ActivityCompat.requestPermissions(
+                this, CAMERAX_PERMISSIONS, 0
+            )
+        }
         enableEdgeToEdge()
         setContent {
-            ScreenContainer()
+            ScreenContainer(lifecycle = this.lifecycle, context = this)
+        }
+    }
+    private fun hasRequiredPermissions(): Boolean {
+        return CAMERAX_PERMISSIONS.all {
+            ContextCompat.checkSelfPermission(
+                applicationContext,
+                it
+            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 }

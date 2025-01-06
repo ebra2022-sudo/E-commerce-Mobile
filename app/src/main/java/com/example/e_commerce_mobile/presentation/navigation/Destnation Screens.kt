@@ -16,6 +16,7 @@ enum class Screens(val route: String) {
     SubCategoryProductsOverviewScreen("SubCategoryProductsOverviewScreen/{subCategoryId}"),
     ProductDisplayAndInformation("ProductDisplayAndReviewScreen"),
     ProductDetailScreen("ProductDetailScreen/{productId}"),
+    Product3DModelScreen("Product3DModelScreen/{modelUrl}"),
 
     Bag("Bag"),
     BagMainScreen("BagMainScreen"),

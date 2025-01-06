@@ -20,6 +20,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okio.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import javax.inject.Inject
 
 @HiltViewModel
@@ -59,6 +64,37 @@ class ProductViewModel @Inject constructor(
 
     private val _currentSubSubCategory = MutableStateFlow<SubSubCategory?>(null)
     val currentSubSubCategory: StateFlow<SubSubCategory?> = _currentSubSubCategory
+
+    private val _modelBuffer = MutableStateFlow<ByteBuffer?>(null)
+    val modelBuffer: StateFlow<ByteBuffer?> = _modelBuffer
+
+
+    fun fetchAndLoadModel(url: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+                if (response.isSuccessful) {
+                    response.body?.let { responseBody ->
+                        val bytes = responseBody.bytes()
+                        val buffer = ByteBuffer.allocateDirect(bytes.size)
+                            .apply { order(ByteOrder.nativeOrder())
+                                put (bytes)
+                                rewind ()
+                            }
+                        withContext (Dispatchers.Main) {
+                            _modelBuffer.value = buffer
+                        }
+                    }
+                } else {
+                    Log.d("Fetch model", "Error: ${response.message}")
+                }
+            } catch (e: IOException) {
+                withContext(Dispatchers.Main) { Log.d("Fetch model", e.message.toString()) }
+            }
+        }
+    }
 
     fun fetchBanners() {
         viewModelScope.launch(Dispatchers.IO) {

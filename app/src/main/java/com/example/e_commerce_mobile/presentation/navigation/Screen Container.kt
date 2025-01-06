@@ -1,6 +1,7 @@
 package com.example.e_commerce_mobile.presentation.navigation
 
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInHorizontally
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -40,8 +42,7 @@ import com.example.e_commerce_mobile.presentation.ui.screens.app_main.favorites.
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.HomeMainScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.profile.MyProfileScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.CategoryAndSearchScreen
-import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.Product
-import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.SubcategoryItem
+import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.Product3DPreviewScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.ProductDetailScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.SubCategoryProductsOverviewScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.auth.LogInScreen
@@ -50,21 +51,21 @@ import com.example.e_commerce_mobile.presentation.ui.screens.auth.SignUpScreen
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun ScreenContainer(modifier: Modifier = Modifier) {
+fun ScreenContainer(modifier: Modifier = Modifier, lifecycle: Lifecycle, context: Context) {
     val navController = rememberNavController()
     val isAuthenticated = false // Replace with actual authentication logic
     val currentBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry.value?.destination?.route
     Log.d("CurrentRoute", currentRoute.toString())
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
 
     // Status bar height
 
-
     Scaffold(
         bottomBar = {
             if (shouldShowBottomNavigation(currentRoute)) {
-                BottomNavigationBar(navController = navController)
+                BottomNavigationBar(navController = navController, selectedIndex = selectedIndex, onItemSelected = {selectedIndex = it})
             }
         }
     ) {paddingValues ->
@@ -120,6 +121,12 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
                         val productId = it.arguments?.getString("productId") ?: "3"
                         ProductDetailScreen(navController = navController, productId = productId.toInt())
                     }
+                    composable(Screens.Product3DModelScreen.withArgs("{modelUrl}"),
+                        arguments = listOf(
+                            navArgument("modelUrl") { type = NavType.StringType }
+                        )) {
+                        val modelUrl = it.arguments?.getString("modelUrl") ?: ""
+                        Product3DPreviewScreen(url = modelUrl, navController = navController, lifecycle = lifecycle, context = context) }
                 }
             }
             // sample of the  ste of he  current valeu of the  sate of the design state of then
@@ -137,8 +144,8 @@ fun ScreenContainer(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavController) {
-    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
+fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavController, selectedIndex: Int, onItemSelected: (Int) -> Unit = {}) {
+
     val items = listOf(Screens.Home.route, Screens.Shop.route, Screens.Bag.route, Screens.Favorites.route, Screens.Profile.route)
     val unSelectedIconResources = listOf(R.drawable.outlined_home, R.drawable.outlined_shop, R.drawable.outlined_bag, R.drawable.outlined_favorite, R.drawable.outlined_profile)
     val selectedIconResources = listOf(R.drawable.filled_home, R.drawable.filled_shop, R.drawable.filled_bag, R.drawable.filled_favorite, R.drawable.filled_profile)
@@ -161,7 +168,7 @@ fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavControl
             NavigationBarItem(
                 icon = {
                     Icon(
-                        painter = painterResource(id = if (selectedItem == index) selectedIconResources[index] else unSelectedIconResources[index]),
+                        painter = painterResource(id = if (selectedIndex == index) selectedIconResources[index] else unSelectedIconResources[index]),
                         contentDescription = screen,
                         tint = Color.Unspecified
                     )
@@ -169,12 +176,12 @@ fun BottomNavigationBar(modifier: Modifier = Modifier, navController: NavControl
                 label = {
                     Text(
                         text = screen,
-                        color = if (selectedItem == index) Color(0xFFDB3022) else Color.Unspecified
+                        color = if (selectedIndex == index) Color(0xFFDB3022) else Color.Unspecified
                     )
                 },
-                selected = selectedItem == index,
+                selected = selectedIndex == index,
                 onClick = {
-                    selectedItem = index
+                    onItemSelected(index)
                     if (currentRoute != screen) {
                         navController.navigate(screen) {
                             // Pop up to the root destination of the graph to avoid building up a large stack of destinations
@@ -217,7 +224,7 @@ fun shouldShowBottomNavigation(currentRoute: String?): Boolean {
 @Preview
 @Composable
 private fun Preview() {
-    ScreenContainer()
+    //ScreenContainer()
     
 }
 

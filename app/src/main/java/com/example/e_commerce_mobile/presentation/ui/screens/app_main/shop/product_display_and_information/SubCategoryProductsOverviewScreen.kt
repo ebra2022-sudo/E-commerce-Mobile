@@ -32,11 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +60,6 @@ import com.example.e_commerce_mobile.presentation.navigation.Screens
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardHorizontal
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardVertical
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.VerticalLazyGridWithKItemsPerScreen
-import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_browsing_and_searching.Product
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
 
@@ -142,9 +141,8 @@ fun SubCategoryProductsOverviewScreen(
                     edgePadding = 0.dp,
                     indicator = { tabPositions ->
                         // Custom color for the tab indicator
-
                     },
-                    divider = {}
+                    divider = { Text("|")}
                 ) {
 
                     subSubCategories.map { it.name }.forEachIndexed { index, subSubCategory ->
@@ -196,19 +194,24 @@ fun SubCategoryProductsOverviewScreen(
                 // Take up remaining space
             ) { page ->
                 val productOverviews = currentProducts.map{ product ->
+
                     @Composable { width: Int ->
                         viewModel.getCurrentSubSubCategory(product.subSubCategory)
+                        var isLiked by rememberSaveable { mutableStateOf(product.isLiked) }
                         if (gridView) {
                             ProductOverviewCardHorizontal(
                                 productName = product.name,
                                 subSubCategory = subSubCategory?.name?:"Unknown",
                                 isNew = false,
-                                isLiked = product.isLiked,
+                                isLiked = isLiked,
                                 discountPercent = product.discount.toInt(),
                                 price = product.price.toDouble(),
                                 rating = product.userRating.toFloat(),
                                 productImage = product.productImageUrl?:"",
-                                onFavorite = { viewModel.onLike(product.id) }
+                                onFavorite = {
+                                    viewModel.onLike(product.id)
+                                    isLiked = !isLiked
+                                }
                             ) {
                                 navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
                             }
@@ -218,7 +221,7 @@ fun SubCategoryProductsOverviewScreen(
                                 productName = product.name,
                                 subSubCategory = subSubCategory?.name?:"Unknown",
                                 width = width,
-                                isLiked = product.isLiked,
+                                isLiked = isLiked,
                                 isNew = false,
                                 discountPercent =product.discount.toInt(),
                                 price = product.price.toDouble(),
@@ -226,7 +229,8 @@ fun SubCategoryProductsOverviewScreen(
                                 productImage = product.productImageUrl?:"",
                                 onFavorite = {
                                     viewModel.onLike(product.id)
-                                    viewModel.fetchProducts(subCategoryId)}
+                                    isLiked = !isLiked
+                                }
                             ){
                                 navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
                             }

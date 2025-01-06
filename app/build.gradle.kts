@@ -64,6 +64,22 @@ dependencies {
     ksp(libs.hilt.compiler)
 
 
+    implementation(libs.filament.android)
+    implementation(libs.gltfio.android)
+    implementation(libs.filament.utils.android)
+    implementation(libs.filamat.android.lite)
+
+
+
+    implementation ("androidx.camera:camera-core:1.2.2")
+    implementation ("androidx.camera:camera-camera2:1.2.2")
+    implementation ("androidx.camera:camera-lifecycle:1.2.2")
+    implementation ("androidx.camera:camera-video:1.2.2")
+
+    implementation ("androidx.camera:camera-view:1.2.2")
+    implementation ("androidx.camera:camera-extensions:1.2.2")
+
+
 
     implementation(libs.accompanist.systemuicontroller.v0360)
     implementation(libs.androidx.navigation.compose)

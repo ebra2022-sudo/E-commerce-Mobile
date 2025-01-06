@@ -20,6 +20,9 @@ room = "2.6.1" # Replace with the desired Room version
 hilt = "2.48" # Latest Hilt version as of December 2024
 ksp = "2.0.0-1.0.22" # Latest KSP version compatible with Hilt 2.48
 
+filamatAndroidLite = "1.44.0"
+filamentAndroid = "1.56.0"
+
 
 
 
@@ -29,6 +32,10 @@ androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-com
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 
+filamat-android-lite = { module = "com.google.android.filament:filamat-android-lite", version.ref = "filamatAndroidLite" }
+filament-android = { module = "com.google.android.filament:filament-android", version.ref = "filamentAndroid" }
+filament-utils-android = { module = "com.google.android.filament:filament-utils-android", version.ref = "filamentAndroid" }
+gltfio-android = { module = "com.google.android.filament:gltfio-android", version.ref = "filamentAndroid" }
 
 accompanist-systemuicontroller-v0360 = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontrollerVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

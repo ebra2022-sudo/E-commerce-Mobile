@@ -141,16 +141,6 @@ fun SubcategoryAdCard() {
 }
 
 
-data class Product(
-    val mainCategory: String,
-    val subCategory: SubcategoryItem = SubcategoryItem("", R.drawable.kids),
-    val subSubCategory: String,
-    val title: String,
-    val price: String,
-    val imageId: Int
-)
-
-
 @Composable
 fun MainCategoryNavigation(
     modifier: Modifier = Modifier,
@@ -214,10 +204,6 @@ fun MainCategoryNavigation(
 }
 
 
-data class SubcategoryItem(
-    val title: String,
-    @DrawableRes val imageId: Int,
-)
 
 
 @Composable
@@ -230,6 +216,7 @@ fun SubcategoryContentScreen(
     subCategoryAd: @Composable () -> Unit = { SubcategoryAdCard() }
 ) {
     val subCategories = viewModel.subCategories.collectAsState().value
+    Log.d("SubcategoryContentScreen", "subCategories: $subCategories")
 
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
@@ -267,6 +254,7 @@ fun SubcategoryContentScreen(
                         fontWeight = FontWeight.W600,
                         fontSize = 18.sp
                     )
+                    Log.d("SubcategoryContentScreen", "Subcategory image: ${subCategory.image}")
 
                     Image(
                         painter = rememberAsyncImagePainter(model = subCategory.image),

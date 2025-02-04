@@ -24,7 +24,9 @@ enum class Screens(val route: String) {
     Favorites("Favorites"),
     FavoritesMainScreen("FavoritesMainScreen"),
     Profile("Profile"),
-    ProfileMainScreen("ProfileMainScreen");
+    ProfileMainScreen("ProfileMainScreen"),
+    OrderDetailsScreen("OrderDetailsScreen/{orderId}"),
+    MyOrdersScreen("MyOrdersScreen");
 
     /**
      * Helper function to build the route with arguments

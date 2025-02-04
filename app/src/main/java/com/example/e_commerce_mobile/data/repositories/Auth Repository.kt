@@ -11,4 +11,6 @@ class AuthRepository @Inject constructor(
 ) {
     suspend fun registerUser(userRegisterForm: UserRegisterForm) = apiService.registerUser(userRegisterForm)
     suspend fun loginUser(userLoginForm: UserLoginForm) = apiService.loginUser(userLoginForm)
+    suspend fun logoutUser(token: String) = apiService.logoutUser("token $token")
+
 }

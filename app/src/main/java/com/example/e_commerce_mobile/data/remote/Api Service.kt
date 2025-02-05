@@ -10,6 +10,12 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
+    // ad endpoints
+
+
+    @GET("product-management/banners/")
+    suspend fun getAdBanners(): Response<List<BannerResponse>>
+
 
     // auth endpoints
 
@@ -23,7 +29,7 @@ interface ApiService {
     suspend fun logoutUser(@Header("Authorization") token: String): Response<Unit>
 
     @GET("product-management/liked-products/")
-    suspend fun getLikedProducts(@Header("Authorization") token: String): Response<List<ProductResponse>>
+    suspend fun getUserLikedProducts(@Header("Authorization") token: String): Response<List<ProductResponse>>
 
 
     // product management endpoints
@@ -31,14 +37,26 @@ interface ApiService {
     suspend fun getProductHierarchy(): Response<List<MainCategoryResponse>>
 
     @GET("product-management/{subCategoryId}/products-per-sub-category/")
-    suspend fun getProducts(@Path("subCategoryId")subCategoryId: Int): Response<List<ProductResponse>>
+    suspend fun getProductsBySubCategory(@Path("subCategoryId")subCategoryId: Int): Response<List<ProductResponse>>
 
+    @GET("product-management/{subSubCategoryId}/products-per-sub-sub-category/")
+    suspend fun getProductsBySubSubCategory(@Path("subSubCategoryId") subSubCategoryId: Int): Response<List<ProductResponse>>
 
     @POST("product-management/{productId}/like/")
     suspend fun likeProduct(
         @Header("Authorization") authHeader: String,
         @Path("productId") productId: Int
     ): Response<ProductResponse>
+
+    @GET("product-management/{productId}/product-details/")
+    suspend fun getProductDetails(@Path("productId") productId: Int): Response<ProductResponse>
+
+
+    @GET("product-management/products/")
+    suspend fun getAllProducts(): Response<List<ProductResponse>>
+
+
+    // order management endpoints
 
     @POST("order-management/{productId}/add-to-cart/")
     suspend fun addProductToCart(
@@ -60,11 +78,8 @@ interface ApiService {
     @GET("order-management/{orderId}/order-details/")
     suspend fun getOrderDetails(@Header("Authorization") authHeader: String, @Path("orderId") orderId: Int): Response<Order>
 
-    @GET("product-management/{productId}/product-details/")
-    suspend fun getProductDetails(@Path("productId") productId: Int): Response<ProductResponse>
 
-    @GET("product-management/banners/")
-    suspend fun getAdBanners(): Response<List<BannerResponse>>
+
 }
 
 

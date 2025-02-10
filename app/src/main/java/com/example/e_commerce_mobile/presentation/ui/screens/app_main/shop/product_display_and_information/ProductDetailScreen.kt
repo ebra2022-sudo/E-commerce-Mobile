@@ -79,15 +79,14 @@ fun ProductDetailScreen(
                         productId: Int,
                         viewModel: ProductViewModel = hiltViewModel()
 ) {
-    Log.d("productId", productId.toString())
-    LaunchedEffect(productId) {
-        viewModel.getCurrentProduct(productId = productId)
-    }
+    viewModel.getCurrentProduct(productId = productId)
     val product = viewModel.currentProduct.collectAsState().value
     Log.d("product", product.toString())
     when (product) {
         null -> {
-            CircularProgressIndicator()
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
             // Show loading or placeholder
         }
         else -> {
@@ -95,9 +94,9 @@ fun ProductDetailScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 HorizontalPagerDemo(imageResources = product.images.map { it.image?:""}, onBack = {navController.navigateUp()})
                 Spacer(modifier = Modifier.height(16.dp))
-                val encodedModelUrl = URLEncoder.encode(product.glbFile, StandardCharsets.UTF_8.toString())
+                val encodedModelUrl = URLEncoder.encode(product.glbFile?:"", StandardCharsets.UTF_8.toString())
                 Button(onClick = {
-                    if (encodedModelUrl != null) navController.navigate(Screens.Product3DModelScreen.withArgs(encodedModelUrl))
+                    if (product.glbFile != null) navController.navigate(Screens.Product3DModelScreen.route + "/$encodedModelUrl")
                 }, modifier = Modifier.align(Alignment.CenterHorizontally),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDB3022), contentColor = Color.White)) {
                     Text(text = if (product.glbFile == null) "No 3D Preview" else "Interactive AR/3D Preview", style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium))))
@@ -105,6 +104,18 @@ fun ProductDetailScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 SpecElement(specs = product.specifications)
+                Button(onClick = {
+                    viewModel.addProductToCart(productId = productId)
+
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDB3022),
+                        contentColor = Color.White), modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                    Text(
+                        text = "ADD TO CART",
+                        style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+                    )
+                }
             }
         }
     }
@@ -191,7 +202,8 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList(), onBack: () -
             }
         }
         Row(modifier = Modifier
-            .fillMaxWidth().padding(horizontal = 8.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
             .align(Alignment.Center),
             horizontalArrangement = Arrangement.SpaceBetween) {
             IconButton(onClick = {
@@ -229,20 +241,23 @@ fun HorizontalPagerDemo(imageResources: List<String> = emptyList(), onBack: () -
                 .align(Alignment.TopEnd)
                 .padding(10.dp)
                 .clickable(onClick = { autoRotate = !autoRotate }))
-        Icon(painter = painterResource(R.drawable.back_arrow), contentDescription = "icon", tint = if (autoRotate) Color.DarkGray else Color.LightGray ,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(10.dp)
-                .clickable(onClick = onBack))
-
-
+        IconButton(modifier = Modifier
+            .align(Alignment.TopStart)
+            .padding(10.dp),
+            onClick = onBack) {
+            Icon(painter = painterResource(R.drawable.back_arrow),
+                contentDescription = "back",
+                tint = if (autoRotate) Color.DarkGray else Color.LightGray)
+        }
     }
 }
 
 @Composable
 fun SpecElement(specs: List<ProductSpec>) {
     Column(modifier = Modifier
-        .fillMaxWidth().padding(horizontal = 8.dp)
+        .fillMaxWidth()
+        .fillMaxHeight(0.9f)
+        .padding(horizontal = 8.dp)
         .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         specs.forEach {
             SpecSection(key = it.key, description = it.description)
@@ -253,7 +268,9 @@ fun SpecElement(specs: List<ProductSpec>) {
 
 @Composable
 fun SpecSection(key: String, description: String) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp)) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 5.dp)) {
         Text(text = key, fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             fontStyle = FontStyle.Italic,

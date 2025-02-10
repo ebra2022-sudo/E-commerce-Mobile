@@ -9,6 +9,12 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.example.e_commerce_mobile.R
+import com.google.android.filament.Box
+import com.google.android.filament.EntityManager
+import com.google.android.filament.IndexBuffer
+import com.google.android.filament.Material
+import com.google.android.filament.RenderableManager
+import com.google.android.filament.VertexBuffer
 import com.google.android.filament.View
 import com.google.android.filament.android.UiHelper
 import com.google.android.filament.utils.KTX1Loader
@@ -74,12 +80,17 @@ class ModelRenderer(private val modelByteBuffer: ByteBuffer, private val context
             val buffer = ByteBuffer.wrap(inputStream.readBytes())
             KTX1Loader.createSkybox(modelViewer.engine, buffer)
         }
+        // Create a ground plane entity
+
+
+
 
         val ibl = context.resources.openRawResource(R.raw.downloads_ibl).use { inputStream ->
             val buffer = ByteBuffer.wrap(inputStream.readBytes())
             KTX1Loader.createIndirectLight(modelViewer.engine, buffer)
         }
         modelViewer.scene.indirectLight = ibl
+
 
 
 

@@ -1,8 +1,10 @@
 [versions]
 accompanistSystemuicontrollerVersion = "0.36.0"
 agp = "8.7.3"
+cameraCoreVersion = "1.4.1"
 coilComposeVersion = "2.4.0"
 converterGsonVersion = "2.9.0"
+datastorePreferencesVersion = "1.1.1"
 gsonVersion = "2.10.1"
 
 hiltNavigationComposeVersion = "1.2.0"
@@ -28,6 +30,13 @@ filamentAndroid = "1.56.0"
 
 [libraries]
 
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCoreVersion" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "cameraCoreVersion" }
+androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraCoreVersion" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCoreVersion" }
+androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraCoreVersion" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCoreVersion" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferencesVersion" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationComposeVersion" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }

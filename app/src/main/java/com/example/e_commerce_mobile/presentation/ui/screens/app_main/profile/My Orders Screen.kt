@@ -1,7 +1,9 @@
 package com.example.e_commerce_mobile.presentation.ui.screens.app_main.profile
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -22,11 +26,13 @@ import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,19 +44,26 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.presentation.navigation.Screens
 import com.example.e_commerce_mobile.presentation.ui.screens.auth.HeadlineAppBar
+import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun MyOrdersScreen(modifier: Modifier = Modifier) {
+fun MyOrdersScreen(modifier: Modifier = Modifier,
+                   navController: NavController = NavController(LocalContext.current),
+                   viewModel: ProductViewModel = hiltViewModel()
+) {
+    viewModel.fetchOrders()
+    val orders = viewModel.orders.collectAsState().value
     Scaffold(
-        topBar = { HeadlineAppBar(title = "My Orders") }
+        topBar = { HeadlineAppBar(title = "My Orders", onNavigationClick = {navController.navigateUp()}) }
     ) {
-        val pagerState = rememberPagerState { 3 }
+        val pagerState = rememberPagerState { 4}
         val coroutineScope = rememberCoroutineScope()
-
-
         Column(
             modifier = Modifier
                 .padding(it)
@@ -111,16 +124,22 @@ fun MyOrdersScreen(modifier: Modifier = Modifier) {
                     .weight(1f)
             )
             {
-                Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                LazyColumn (
+                    modifier = Modifier.fillMaxSize(),
                 ) {
-                    repeat(10) {
-                        OrderItem(orderStatus =
-                        if(pagerState.currentPage == 0) DeliveryStatus.Delivered
-                        else if (pagerState.currentPage == 1) DeliveryStatus.Processing
-                        else DeliveryStatus.Cancelled)
+                    items(orders.sortedBy { it.orderDate}) {
+                        OrderItem(
+                            orderStatus = it.status,
+                            orderNumber = it.orderNumber,
+                            trackingNumber = it.trackingNumber,
+                            quantity = it.item.quantity,
+                            pricePerUnit = it.item.price.toDouble(),
+                            orderDate = it.orderDate
+                            ) {
+                            Log.d("Order Number: ", it.id.toString())
+
+                            navController.navigate(Screens.OrderDetailsScreen.route + "/${it.id}")
+                        }
                     }
                 }
             }
@@ -132,17 +151,18 @@ fun MyOrdersScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun OrderItem(
-    orderStatus: DeliveryStatus = DeliveryStatus.Delivered,
+    orderStatus: String,
     orderNumber: String = "123456789",
     trackingNumber: String = "123456789",
     quantity: Int = 3,
     pricePerUnit: Double = 112.0,
     orderDate: String = "01-04-2025",
     onDetailsClick: () -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     Card (modifier = Modifier
         .fillMaxWidth()
-        .padding(8.dp),
+        .padding(8.dp).clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color.White),
         elevation = CardDefaults.cardElevation(
@@ -245,7 +265,7 @@ fun OrderItem(
                 ) {
                     Text(text = "Details", color = Color(0xFF222222))
                 }
-                Text(text = orderStatus.name,
+                Text(text = orderStatus,
                     color = Color(0xFF2AA952),
                     style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium))))
             }
@@ -256,7 +276,8 @@ fun OrderItem(
 enum class DeliveryStatus {
     Delivered,
     Processing,
-    Cancelled
+    Cancelled,
+    Cart
 }
 
 @Preview

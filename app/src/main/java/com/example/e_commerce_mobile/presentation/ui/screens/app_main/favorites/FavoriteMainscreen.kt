@@ -42,6 +42,7 @@ import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.Produ
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.VerticalLazyGridWithKItemsPerScreen
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.shop.product_display_and_information.ControlTextButtons
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
+import kotlin.toString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,15 +106,17 @@ fun FavoritesMainScreen(modifier: Modifier = Modifier,
                     if(currentLikedProduct?.id == product.id) {
                         product.copy(likedBy = currentLikedProduct.likedBy)
                     }
-                    viewModel.getCurrentSubSubCategory(product.subSubCategory)
-                    val currentSubSubCategory = viewModel.currentSubSubCategory.collectAsState().value
-                    @Composable { width: Int ->
-                        viewModel.getCurrentSubSubCategory(product.subSubCategory)
 
+                    @Composable { width: Int ->
+                        var subSubCategoryName by rememberSaveable { mutableStateOf("") }
+                        viewModel.getCurrentSubSubCategory(product.subSubCategory) {
+                            subSubCategoryName = it
+                            Log.d("Get current sub sub category", subSubCategoryName.toString())
+                        }
                         if (gridView) {
                             ProductOverviewCardHorizontal(
                                 productName = product.name,
-                                subSubCategory = currentSubSubCategory?.name?:"Unknown",
+                                subSubCategory = subSubCategoryName,
                                 isNew = false,
                                 isLiked = product.likedBy.contains(userId),
                                 discountPercent = product.discount.toInt(),
@@ -124,13 +127,13 @@ fun FavoritesMainScreen(modifier: Modifier = Modifier,
                                     viewModel.onLike(product.id)
                                 }
                             ) {
-                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                                navController.navigate(Screens.ProductDetailScreen.route + "/${product.id}")
                             }
                         }
                         else {
                             ProductOverviewCardVertical(
                                 productName = product.name,
-                                subSubCategory = currentSubSubCategory?.name?:"Unknown",
+                                subSubCategory = subSubCategoryName,
                                 width = width,
                                 isLiked = product.likedBy.contains(userId),
                                 isNew = false,
@@ -142,7 +145,7 @@ fun FavoritesMainScreen(modifier: Modifier = Modifier,
                                     viewModel.onLike(product.id)
                                 }
                             ){
-                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                                navController.navigate(Screens.ProductDetailScreen.route + "/${product.id}")
                             }
                         }
                     }

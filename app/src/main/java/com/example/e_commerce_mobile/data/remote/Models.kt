@@ -11,6 +11,7 @@ data class UserLoginForm(
 
 data class UserLoginResponseWithMessage(
     @SerializedName("status_message") val statusMessage: String,
+    @SerializedName("user_id") val userId: Int,
     @SerializedName("access_token") val accessToken: String,
 )
 
@@ -46,7 +47,7 @@ data class ProductResponse(
     val price: String,
     val discount: Double,
     val specifications: List<ProductSpec>,
-    @SerializedName("is_liked") val isLiked: Boolean,
+    @SerializedName("liked_by") val likedBy: List<Int>,
     @SerializedName("user_rating") val userRating: Double,
     @SerializedName("glb_file")val glbFile: String?,
     @SerializedName("product_image_url")val productImageUrl: String?,
@@ -62,6 +63,37 @@ data class ProductImage(
     val product: Int,
     val image: String?
 )
+
+data class Order(
+    val id: Int,
+    val clients: List<Int>,
+    @SerializedName("order_number") val orderNumber: String,
+    @SerializedName("tracking_number") val trackingNumber: String,
+    val status: String,
+    @SerializedName("order_date") val orderDate: String,
+    @SerializedName("delivery_date") val deliveryDate: String,
+    @SerializedName("shipping_address") val shippingAddress: String,
+    @SerializedName("payment_method") val paymentMethod: String,
+    @SerializedName("delivery_method") val deliveryMethod: String,
+    @SerializedName("delivery_cost") val deliveryCost: String,
+    val discount: String,
+    @SerializedName("discount_details") val discountDetails: String?,
+    @SerializedName("product_id") val productId: Int,
+    @SerializedName("total_amount") val totalAmount: String,
+    val item: OrderItem
+)
+
+data class OrderItem(
+    val id: Int,
+    @SerializedName("image_url") val imageUrl: String,
+    @SerializedName("total_price") val totalPrice: Double,
+    @SerializedName("product_name") val productName: String,
+    @SerializedName("product_Id") val productId: Int,
+    val quantity: Int,
+    val price: String,
+    val order: Int
+)
+
 
 
 

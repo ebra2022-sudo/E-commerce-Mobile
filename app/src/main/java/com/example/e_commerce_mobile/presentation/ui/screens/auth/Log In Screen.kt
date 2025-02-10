@@ -60,9 +60,11 @@ fun LogInScreen(
             onNavigationClick = {navController.navigateUp()}) }
 
     ) {
-        val loginStatus = viewModel.loginStatus.collectAsState().value
-        if (loginStatus) {
-            navController.navigate(Screens.Home.route)
+
+        if (viewModel.isLoggedIn.collectAsState().value) {
+            LaunchedEffect(Unit) {
+                navController.navigate(Screens.Home.route)
+            }
         }
 
 

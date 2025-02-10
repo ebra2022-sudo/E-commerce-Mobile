@@ -13,25 +13,22 @@ enum class Screens(val route: String) {
     Shop("Shop"),
     ProductBrowsingAndSearching("ProductBrowsingAndSearching"),
     CategoryAndSearchScreen("CategoryAndSearchScreen"),
-    SubCategoryProductsOverviewScreen("SubCategoryProductsOverviewScreen/{subCategoryId}"),
+    SubCategoryProductsOverviewScreen("SubCategoryProductsOverviewScreen"),
     ProductDisplayAndInformation("ProductDisplayAndReviewScreen"),
-    ProductDetailScreen("ProductDetailScreen/{productId}"),
-    Product3DModelScreen("Product3DModelScreen/{modelUrl}"),
+    ProductDetailScreen("ProductDetailScreen"),
+    Product3DModelScreen("Product3DModelScreen"),
 
     Bag("Bag"),
     BagMainScreen("BagMainScreen"),
 
     Favorites("Favorites"),
     FavoritesMainScreen("FavoritesMainScreen"),
+
     Profile("Profile"),
     ProfileMainScreen("ProfileMainScreen"),
-    OrderDetailsScreen("OrderDetailsScreen/{orderId}"),
-    MyOrdersScreen("MyOrdersScreen");
+    MyOrdersScreen("MyOrdersScreen"),
+    OrderDetailsScreen("OrderDetailsScreen");
 
-    /**
-     * Helper function to build the route with arguments
-     */
-    fun withArgs(vararg args: String): String {
-        return route + args.joinToString(separator = "/", prefix = "/")
-    }
+
+
 }

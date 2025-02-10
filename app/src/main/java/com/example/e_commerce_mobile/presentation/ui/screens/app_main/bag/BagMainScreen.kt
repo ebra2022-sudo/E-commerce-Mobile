@@ -22,14 +22,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -37,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -45,6 +45,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,34 +54,47 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BagMainScreen(modifier: Modifier = Modifier, viewModel: ProductViewModel = hiltViewModel()) {
+fun BagMainScreen(viewModel: ProductViewModel = hiltViewModel()) {
     viewModel.fetchOrderItems()
     val orderItems = viewModel.orderItems.collectAsState().value
     val addProductResult = viewModel.addProductResult.collectAsState().value
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         topBar = {
             MediumTopAppBar(
+                modifier = Modifier,
                 title = {
                     Text(
-                        text = "My bag",
-                        fontSize = 34.sp,
+                        text = "My Cart", modifier = Modifier.fillMaxWidth(),
+                        textAlign = if (scrollBehavior.state.collapsedFraction >= 0.75f) TextAlign.Center else TextAlign.Start,
+                        fontSize = 30.sp,
                         style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_bold)))
+
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = {
+                    }) {
+                        Icon(painter = painterResource(R.drawable.back), contentDescription = "Back")
+                    }
+                },
                 actions = {
-                    // Menu icon to trigger the dropdown
-                    IconButton(onClick = { }, modifier = Modifier) {
+                    IconButton(onClick = {}) {
                         Icon(
-                            painter = painterResource(id = R.drawable.dots_vertical), // Replace with your menu icon
-                            contentDescription = "Menu"
+                            painter = painterResource(R.drawable.search),
+                            contentDescription = "Search"
                         )
                     }
-                    // Dropdown Menu
-                }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    scrolledContainerColor = Color.White,
+
+                    )
             )
         }
     ) {
@@ -94,7 +108,7 @@ fun BagMainScreen(modifier: Modifier = Modifier, viewModel: ProductViewModel = h
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
-                    .background(Color.White)
+                    .background(Color.White).nestedScroll(scrollBehavior.nestedScrollConnection)
             ) {
                 Log.d("orderItems", orderItems.toString())
                 items(orderItems.sortedBy { it.productName }) {
@@ -256,10 +270,8 @@ fun BagItem(
                     )
                 }
             }
-
         }
     }
-    
 }
 
 @Preview

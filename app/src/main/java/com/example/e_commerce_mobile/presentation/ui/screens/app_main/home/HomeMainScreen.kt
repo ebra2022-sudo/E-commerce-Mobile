@@ -10,23 +10,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -38,12 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,19 +58,26 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.e_commerce_mobile.R
 import com.example.e_commerce_mobile.data.remote.BannerResponse
+import com.example.e_commerce_mobile.presentation.navigation.Screens
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 @Composable
 fun HomeMainScreen(
-    modifier: Modifier = Modifier,
     navController: NavController = NavController(context = LocalContext.current),
     viewModel: ProductViewModel = hiltViewModel()
 ) {
+    viewModel.fetchLikedProducts()
+    val likedProducts by viewModel.likedProducts.collectAsState()
+    Log.d("likedProducts", likedProducts.toString())
+
     viewModel.fetchBanners()
     val banners by viewModel.banners.collectAsState()
     Log.d("banners", banners.toString())
+
+    val userId = viewModel.userId.collectAsState().value?.toInt() ?: -1
+    val currentLikedProduct = viewModel.currentLikedProduct.collectAsState().value
 
     Column(
         modifier = Modifier
@@ -102,75 +92,49 @@ fun HomeMainScreen(
             if (banners.isNotEmpty()) {
                 AdCardDisplay(imageResourceWithDescription = banners)
             }
-            //  ahte  aht
 
             // Sale Section
             SectionHeader(title = "Sale", subtitle = "Super summer sale")
-            val productsSale = List(6) { index ->
-                @Composable { width: Int ->
-                    ProductOverviewCardVertical(
-                        width = width,
-                        isNew = false,
-                        discountPercent =10,
-                    )
-                }
-            }
-
-            LazyRowWithKItemsPerScreen(
-                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3, // Number of items per screen
-                spacer = 16, // Space between items
-                items = productsSale
-            )
-
+            val productsSale = List(6) { index -> }
 
             Spacer(Modifier.height(20.dp))
-            // New Section
-            SectionHeader(title = "New", subtitle = "You've never seen before!")
-            val productsNew = List(6) { index ->
-                @Composable { width: Int ->
-                    ProductOverviewCardVertical(
-                        width = width,
-                        isNew = true,
-                        discountPercent = 0,
-                        price = 1300.0,
-                        rating = 0f
-                    )
-                }
-            }
 
-            LazyRowWithKItemsPerScreen(
-                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3, // Number of items per screen
-                spacer = 16, // Space between items
-                items = productsNew
-            )
-
-
-
-            Spacer(Modifier.height(20.dp))
             // Recommended Section
             SectionHeader(title = "Recommended", subtitle = "Just for you!")
-            val productsRecommended = List(6) { index ->
+            val productsRecommended: List<@Composable (Int) -> Unit> = likedProducts.map { product ->
+                if(currentLikedProduct?.id == product.id) {
+                    product.copy(likedBy = currentLikedProduct.likedBy)
+                }
                 @Composable { width: Int ->
+                    var subSubCategoryName by rememberSaveable { mutableStateOf("") }
+                    viewModel.getCurrentSubSubCategory(product.subSubCategory) {
+                        subSubCategoryName = it
+                    }
+
                     ProductOverviewCardVertical(
+                        productName = product.name,
+                        subSubCategory = subSubCategoryName.toString(),
                         width = width,
+                        isLiked = product.likedBy.contains(userId),
                         isNew = false,
-                        discountPercent =10,
-                        price = 1300.0,
-                        rating = 4.3f
-                    )
+                        discountPercent = product.discount.toInt(),
+                        price = product.price.toDouble(),
+                        rating = product.userRating.toFloat(),
+                        productImage = product.productImageUrl ?: "",
+                        onFavorite = { viewModel.onLike(product.id) }
+                    ) {
+                        navController.navigate(Screens.ProductDetailScreen.route + "/${product.id}")
+                    }
                 }
             }
-
             LazyRowWithKItemsPerScreen(
-                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3, // Number of items per screen
-                spacer = 16, // Space between items
+                k = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3,
+                spacer = 16,
                 items = productsRecommended
             )
         }
     }
 }
-
-
 
 @Composable
 fun SectionHeader(title: String, subtitle: String, onSeeAllClick: () -> Unit = {}) {
@@ -187,20 +151,24 @@ fun SectionHeader(title: String, subtitle: String, onSeeAllClick: () -> Unit = {
                 style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_bold))),
                 fontSize = 32.sp
             )
-            Text(text = subtitle, color = Color(0xFF9B9B9B), fontSize = 15.sp,
-                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium))),
-                )
+            Text(
+                text = subtitle,
+                color = Color(0xFF9B9B9B),
+                fontSize = 15.sp,
+                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)))
+            )
         }
         TextButton(onClick = onSeeAllClick) {
             Text("View All")
         }
     }
 }
+
 @Composable
 fun LazyRowWithKItemsPerScreen(
     k: Int,
     spacer: Int = 0,
-    items: List<@Composable (width: Int) -> Unit>
+    items: List<@Composable (Int) -> Unit>
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
@@ -210,37 +178,11 @@ fun LazyRowWithKItemsPerScreen(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(spacer.dp)
     ) {
-        items(items) { item ->
-            item(itemWidth)
+        items(items.size) { index ->
+            items[index](itemWidth)
         }
     }
 }
-
-@Composable
-fun VerticalLazyGridWithKItemsPerScreen(
-    modifier: Modifier = Modifier,
-    nestedScrollConnection: NestedScrollConnection,
-    k: Int,
-    spacer: Int = 0,
-    items: List<@Composable (width: Int) -> Unit>
-) {
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp
-    val itemWidth = (screenWidth - ((k - 1) * spacer)) / k
-    // the same the
-    LazyVerticalGrid(
-        modifier = modifier.nestedScroll(nestedScrollConnection),
-        columns = GridCells.Fixed(k),
-        verticalArrangement = Arrangement.spacedBy(spacer.dp),
-        horizontalArrangement = Arrangement.spacedBy(spacer.dp)
-    ) {
-        items(items) { item ->
-            item(itemWidth)
-        }
-    }
-}
-
-
 
 @Composable
 fun ProductOverviewCardVertical(
@@ -254,17 +196,21 @@ fun ProductOverviewCardVertical(
     rating: Float = 4.9f,
     price: Double = 1399.0,
     isLiked: Boolean = false,
-    onProductOverviewClick: () -> Unit = {}) {
-    Column (modifier = Modifier
-        .shadow(elevation = 8.dp, shape = RoundedCornerShape(5.dp), spotColor = Color(0xFF9B9B9B))
-        .width(width = width.dp)
-        .clip(RoundedCornerShape(5.dp))
-        .clickable(onClick = onProductOverviewClick)
-        .background(Color.White)
-        .padding(3.dp)) {
-        CustomImageWithFavoriteCircle(modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
+    onProductOverviewClick: () -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(5.dp), spotColor = Color(0xFF9B9B9B))
+            .width(width.dp)
+            .clip(RoundedCornerShape(5.dp))
+            .clickable(onClick = onProductOverviewClick)
+            .background(Color.White)
+            .padding(3.dp)
+    ) {
+        CustomImageWithFavoriteCircle(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
             isNew = isNew,
             onFavorite = onFavorite,
             discountPercent = discountPercent,
@@ -272,58 +218,51 @@ fun ProductOverviewCardVertical(
             isLiked = isLiked
         )
 
-        Column(modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
             StarRating(rating = rating)
-            Text(text = subSubCategory,
-                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)),
-                    fontSize = 10.sp),
+            Text(
+                text = subSubCategory,
+                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)), fontSize = 10.sp),
                 fontWeight = FontWeight.W300,
                 color = Color(0xFF9B9B9B),
-                modifier = Modifier.padding(top = 5.dp))
+                modifier = Modifier.padding(top = 5.dp)
+            )
             Column(
                 verticalArrangement = Arrangement.Bottom,
             ) {
                 Text(
                     text = productName,
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.metropolis_medium)),
-                        fontSize = 15.sp
-                    ),
+                    style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)), fontSize = 15.sp),
                     fontWeight = FontWeight.W800,
                     color = Color(0xFF222222),
                     maxLines = 2,
                     modifier = Modifier.padding(top = 5.dp)
                 )
                 Text(
-                    text = buildAnnotatedString{
+                    text = buildAnnotatedString {
                         if (discountPercent > 0) {
                             withStyle(style = SpanStyle(color = Color(0xFF9B9B9B), textDecoration = TextDecoration.LineThrough)) {
                                 append("$price\$")
                             }
-
                             withStyle(style = SpanStyle(color = Color(0xFFDB3022))) {
                                 append("    ${(price - (price * discountPercent / 100))}\$")
                             }
-                        }
-                        else {
+                        } else {
                             withStyle(style = SpanStyle(color = Color(0xFF222222))) {
                                 append("$price\$")
                             }
                         }
                     },
-                    style = TextStyle(
-                        fontFamily = FontFamily(Font(R.font.metropolis_medium)),
-                        fontSize = 12.sp
-                    ),
+                    style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_medium)), fontSize = 12.sp),
                     color = Color(0xFF222222),
                     fontWeight = FontWeight.W100,
                     maxLines = 2,
                     modifier = Modifier.padding(top = 5.dp)
                 )
             }
-
-
         }
     }
 }
@@ -481,13 +420,17 @@ fun ProductOverviewCardHorizontal(
     }
 }
 
+
+
 @Composable
-fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : () -> Unit = {},
-                                  isNew: Boolean = false,
-                                  isLiked: Boolean,
-                                  discountPercent: Int= 20,
-                                  productImage: String
-                                  ) {
+fun CustomImageWithFavoriteCircle(
+    modifier: Modifier = Modifier,
+    onFavorite: () -> Unit = {},
+    isNew: Boolean = false,
+    isLiked: Boolean,
+    discountPercent: Int = 20,
+    productImage: String
+) {
     Box(modifier = modifier) {
         Image(
             painter = rememberAsyncImagePainter(productImage),
@@ -498,24 +441,30 @@ fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : ()
                 .fillMaxHeight(0.93f)
                 .clip(RoundedCornerShape(5.dp))
                 .border(width = 1.dp, color = Color.LightGray, shape = RoundedCornerShape(5.dp))
-                )
-        Surface(modifier = Modifier
-            .size(40.dp)
-            .shadow(elevation = 10.dp, shape = CircleShape)
-            .align(Alignment.BottomEnd)
-            .clickable(onClick = onFavorite),
+        )
+        Surface(
+            modifier = Modifier
+                .size(40.dp)
+                .shadow(elevation = 10.dp, shape = CircleShape)
+                .align(Alignment.BottomEnd)
+                .clickable(onClick = onFavorite),
             color = Color.White,
-            ) {
-            Icon(painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite), contentDescription = "favorite", tint = Color.Unspecified, modifier = Modifier.padding(10.dp))
-
+        ) {
+            Icon(
+                painter = painterResource(id = if (isLiked) R.drawable.filled_favorite else R.drawable.outlined_favorite),
+                contentDescription = "favorite",
+                tint = Color.Unspecified,
+                modifier = Modifier.padding(10.dp)
+            )
         }
 
         if (isNew) {
-            Surface(modifier = Modifier
-                .padding(5.dp)
-                .size(40.dp, 24.dp)
-                .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
-                .align(Alignment.TopStart),
+            Surface(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .size(40.dp, 24.dp)
+                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
+                    .align(Alignment.TopStart),
                 color = Color.Black,
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -524,66 +473,73 @@ fun CustomImageWithFavoriteCircle(modifier: Modifier = Modifier, onFavorite : ()
             }
         }
         if (discountPercent > 0) {
-            Surface(modifier = Modifier
-                .padding(5.dp)
-                .size(40.dp, 24.dp)
-                .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
-                .align(Alignment.TopEnd),
+            Surface(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .size(40.dp, 24.dp)
+                    .shadow(elevation = 10.dp, shape = RoundedCornerShape(10.dp))
+                    .align(Alignment.TopEnd),
                 color = Color(0xFFDB3022),
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = "-$discountPercent%", color = Color(0xFFFFFFFF))
                 }
             }
-
         }
     }
 }
 
 @Composable
-fun AdCard(modifier: Modifier = Modifier, imageResource: String, description: String = "" ) {
-    Card(modifier = modifier
-        .fillMaxWidth()
-        .height(250.dp),
-        shape = RoundedCornerShape(0.dp)) {
+fun AdCard(modifier: Modifier = Modifier, imageResource: String, description: String = "") {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(250.dp),
+        shape = RoundedCornerShape(0.dp)
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Image(modifier = Modifier.fillMaxSize(), painter = rememberAsyncImagePainter(imageResource), contentScale = ContentScale.FillBounds, contentDescription = "ad image")
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = rememberAsyncImagePainter(imageResource),
+                contentScale = ContentScale.FillBounds,
+                contentDescription = "ad image"
+            )
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
-                                Color.Transparent, // Top of the gradient
-                                Color.Black.copy(alpha = 0.9f) // Bottom of the gradient
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.9f)
                             ),
-                            startY = 200f, // Adjust start position of gradient
-                            endY = Float.POSITIVE_INFINITY // Full height of the image
+                            startY = 200f,
+                            endY = Float.POSITIVE_INFINITY
                         )
                     )
             )
-            Text(text = description, style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_bold)), fontSize = 26.sp, color = Color(0xFFFFFFFF)),
-                fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic, modifier = Modifier
+            Text(
+                text = description,
+                style = TextStyle(fontFamily = FontFamily(Font(R.font.metropolis_bold)), fontSize = 26.sp, color = Color(0xFFFFFFFF)),
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier
                     .padding(20.dp)
-                    .align(Alignment.BottomStart))
+                    .align(Alignment.BottomStart)
+            )
         }
-
     }
-    
 }
 
-
 @Composable
-fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: List<BannerResponse>) {
-    val pagerState = rememberPagerState {imageResourceWithDescription.size}
-    val pagerIsDragged  = pagerState.interactionSource.collectIsDraggedAsState()
+fun AdCardDisplay(imageResourceWithDescription: List<BannerResponse>) {
+    val pagerState = rememberPagerState { imageResourceWithDescription.size }
+    val pagerIsDragged = pagerState.interactionSource.collectIsDraggedAsState()
 
     val pageInteractionSource = remember { MutableInteractionSource() }
-    val pageIsPressed  = pageInteractionSource.collectIsPressedAsState()
+    val pageIsPressed = pageInteractionSource.collectIsPressedAsState()
 
-    // Stop auto-advancing when pager is dragged or one of the pages is pressed
-    val autoAdvance = !pagerIsDragged.value&& !pageIsPressed.value
-
+    val autoAdvance = !pagerIsDragged.value && !pageIsPressed.value
 
     if (autoAdvance) {
         LaunchedEffect(pagerState, pageInteractionSource) {
@@ -597,77 +553,83 @@ fun AdCardDisplay(modifier: Modifier = Modifier, imageResourceWithDescription: L
     HorizontalPager(
         state = pagerState,
         pageSpacing = 10.dp
-    ) { page  ->
+    ) { page ->
         AdCard(imageResource = imageResourceWithDescription[page].adImage, description = imageResourceWithDescription[page].adTitle)
     }
 }
 
-
 @Composable
 fun StarRating(
-    rating: Float, // Rating value out of 5
+    rating: Float,
     modifier: Modifier = Modifier,
-    starCount: Int = 5, // Total number of stars
+    starCount: Int = 5,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         var numberOfFilledStars = rating.toInt()
-        if(abs(rating - numberOfFilledStars) > 0.8) {
+        if (abs(rating - numberOfFilledStars) > 0.8) {
             numberOfFilledStars++
-
         }
         repeat(numberOfFilledStars) {
             Icon(
                 painter = painterResource(R.drawable.fully_rated_star),
                 contentDescription = "Filled rating Star $it",
                 tint = Color.Unspecified,
-                modifier = Modifier.size(24.dp))
+                modifier = Modifier.size(24.dp)
+            )
         }
-        val numberOfHalfFilledStars =  if(abs(rating - numberOfFilledStars) !in 0.3 .. 0.8) 0 else 1
+        val numberOfHalfFilledStars = if (abs(rating - numberOfFilledStars) !in 0.3..0.8) 0 else 1
         repeat(numberOfHalfFilledStars) {
             Icon(
                 painter = painterResource(R.drawable.semi_rated_star),
                 contentDescription = "Semi-filled rating Star",
                 tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(24.dp)
-                    .padding(2.dp))
+                modifier = Modifier.size(24.dp)
+            )
         }
         repeat(starCount - numberOfFilledStars - numberOfHalfFilledStars) {
             Icon(
                 painter = painterResource(R.drawable.outlined_star),
                 contentDescription = "Empty rating Star",
                 tint = Color.Unspecified,
-                modifier = Modifier.size(24.dp))
+                modifier = Modifier.size(24.dp)
+            )
         }
         Spacer(Modifier.width(5.dp))
         Text(text = "($rating)", color = Color(0xFF9B9B9B), fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
     }
-
 }
 
 
-//@Composable
-//fun HomeMainScreen(modifier: Modifier = Modifier) {
-//    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//        Text("This is Home Main Screen")
-//    }
-//}
+
+
+
+@Composable
+fun VerticalLazyGridWithKItemsPerScreen(
+    modifier: Modifier = Modifier,
+    nestedScrollConnection: NestedScrollConnection? = null,
+    k: Int,
+    spacer: Int = 0,
+    items: List<@Composable (Int) -> Unit>
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    val itemWidth = (screenWidth - ((k - 1) * spacer)) / k
+    // the same the
+    LazyVerticalGrid(
+        modifier = modifier.nestedScroll(nestedScrollConnection ?: return),
+        columns = GridCells.Fixed(k),
+        verticalArrangement = Arrangement.spacedBy(spacer.dp),
+        horizontalArrangement = Arrangement.spacedBy(spacer.dp)
+    ) {
+        items(items.size) { index ->
+            items[index](itemWidth)
+        }
+    }
+}
 
 
 @Preview(apiLevel = 35)
 @Composable
 private fun Preview() {
-    // HomeScreen()
-    // StarRating(rating = 1.32f)
-    // ProductCardNew()
-//    AdCardDisplay(imageResourceWithDescription = listOf(
-//        Pair(R.drawable.ad_1, "Latest Devices"),
-//        Pair(R.drawable.ad_2, "Galaxy Smart"),
-//        Pair(R.drawable.ad_3,"Negotiable Prices"),
-//        Pair(R.drawable.ad_4,"Luxury Cars")
-//
-//    )
-//    )
-
-    ProductOverviewCardHorizontal()
+    //ProductOverviewCardHorizontal()
 }

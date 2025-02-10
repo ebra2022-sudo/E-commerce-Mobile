@@ -33,6 +33,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -56,11 +57,15 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.e_commerce_mobile.R
+import com.example.e_commerce_mobile.data.local.SubSubCategory
+import com.example.e_commerce_mobile.data.remote.ProductResponse
 import com.example.e_commerce_mobile.presentation.navigation.Screens
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardHorizontal
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.ProductOverviewCardVertical
 import com.example.e_commerce_mobile.presentation.ui.screens.app_main.home.VerticalLazyGridWithKItemsPerScreen
 import com.example.e_commerce_mobile.presentation.viewmodel.ProductViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -78,9 +83,10 @@ fun SubCategoryProductsOverviewScreen(
     Log.d("SubCategoryProductsOverviewScreen", "subSubCategories: ${viewModel.subSubCategories.collectAsState().value}")
     val subSubCategories = viewModel.subSubCategories.collectAsState().value
     val subCategory = viewModel.currentSubCategory.collectAsState().value
-    val subSubCategory = viewModel.currentSubSubCategory.collectAsState().value
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val currentProducts = viewModel.currentProducts.collectAsState().value
+    val currentLikedProduct = viewModel.currentLikedProduct.collectAsState().value
+    val userId = viewModel.userId.collectAsState().value?.toInt()?:-1
+    val currentProductsBySubSubCategoryId = viewModel.currentProductsBySubSubCategoryId.collectAsState().value
     Scaffold(
         topBar = {
             MediumTopAppBar(
@@ -124,13 +130,19 @@ fun SubCategoryProductsOverviewScreen(
             end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
             bottom = 0.dp
         )
-        val pagerState = rememberPagerState { subSubCategories.size }
+        val allSubSubCategories = subSubCategories + SubSubCategory(-1, "All", subCategoryId)
+        val pagerState = rememberPagerState { allSubSubCategories.size }
         val coroutineScope = rememberCoroutineScope()
         Log.d("mainCategory", (subCategory?.mainCategoryId?:"Unknown").toString())
         Log.d("subCategory", subCategory?.name?:"Unknown")
         Log.d("subSubCategoriesToCorrespondingProducts length", subSubCategories.size.toString())
         Log.d("allProducts", subSubCategories.size.toString())
         var gridView by rememberSaveable { mutableStateOf(false) }
+
+        val sortedSubSubCategories = allSubSubCategories.sortedWith(
+            compareByDescending<SubSubCategory> { it.name == "All" }
+                .thenBy { it.name }
+        )
 
         Column(modifier = Modifier.padding(adjustedPadding).background(Color.White)) {
             // Tab Row
@@ -142,10 +154,13 @@ fun SubCategoryProductsOverviewScreen(
                     indicator = { tabPositions ->
                         // Custom color for the tab indicator
                     },
-                    divider = { Text("|")}
+
+
                 ) {
 
-                    subSubCategories.map { it.name }.forEachIndexed { index, subSubCategory ->
+
+
+                    sortedSubSubCategories.forEachIndexed { index, subSubCategory ->
                         Tab(
                             selected = pagerState.currentPage == index,
                             onClick = {
@@ -161,15 +176,14 @@ fun SubCategoryProductsOverviewScreen(
                                     modifier = Modifier
                                         .clip(shape = RoundedCornerShape(10.dp))
                                         .background(
-                                            if (pagerState.currentPage == index) Color(0xFFDB3022) else Color(
-                                                0xFF222222
-                                            )
+                                            if (pagerState.currentPage == index) Color(0xFFDB3022) else Color(0xFF222222)
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
+
                                     Text(
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                        text = subSubCategories[index].name,
+                                        text = subSubCategory.name,
                                         fontWeight = if (pagerState.currentPage == index) FontWeight.Bold else FontWeight.W300,
                                         fontSize = 20.sp,
                                         color = Color.White,
@@ -193,51 +207,63 @@ fun SubCategoryProductsOverviewScreen(
                 state = pagerState,
                 // Take up remaining space
             ) { page ->
-                val productOverviews = currentProducts.map{ product ->
+
+                viewModel.getProductsBySubSubCategory(subSubCategoryId = sortedSubSubCategories[pagerState.currentPage].id)
+                Log.d("Products by sub sub category", currentProductsBySubSubCategoryId.toString())
+
+
+                val productOverviews = currentProductsBySubSubCategoryId.sortedBy { it.name }.map { product ->
+
+                    if(currentLikedProduct?.id == product.id) {
+                        product.copy(likedBy = currentLikedProduct.likedBy)
+                    }
 
                     @Composable { width: Int ->
-                        viewModel.getCurrentSubSubCategory(product.subSubCategory)
-                        var isLiked by rememberSaveable { mutableStateOf(product.isLiked) }
+                        var subSubCategoryName by rememberSaveable { mutableStateOf("") }
+                        viewModel.getCurrentSubSubCategory(product.subSubCategory) {
+                            subSubCategoryName = it
+                        }
                         if (gridView) {
                             ProductOverviewCardHorizontal(
                                 productName = product.name,
-                                subSubCategory = subSubCategory?.name?:"Unknown",
+                                subSubCategory = subSubCategoryName,
                                 isNew = false,
-                                isLiked = isLiked,
+                                isLiked = product.likedBy.contains(userId),
                                 discountPercent = product.discount.toInt(),
                                 price = product.price.toDouble(),
                                 rating = product.userRating.toFloat(),
-                                productImage = product.productImageUrl?:"",
-                                onFavorite = {
-                                    viewModel.onLike(product.id)
-                                    isLiked = !isLiked
-                                }
+                                productImage = product.productImageUrl ?: "",
+                                onFavorite = { viewModel.onLike(product.id) }
                             ) {
-                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                                navController.navigate(
+                                    Screens.ProductDetailScreen.route + "/${product.id}"
+                                )
                             }
-                        }
-                        else {
+                        } else {
                             ProductOverviewCardVertical(
                                 productName = product.name,
-                                subSubCategory = subSubCategory?.name?:"Unknown",
+                                subSubCategory = subSubCategoryName,
                                 width = width,
-                                isLiked = isLiked,
+                                isLiked = product.likedBy.contains(userId),
                                 isNew = false,
-                                discountPercent =product.discount.toInt(),
+                                discountPercent = product.discount.toInt(),
                                 price = product.price.toDouble(),
-                                rating =product.userRating.toFloat(),
-                                productImage = product.productImageUrl?:"",
-                                onFavorite = {
-                                    viewModel.onLike(product.id)
-                                    isLiked = !isLiked
-                                }
-                            ){
-                                navController.navigate(Screens.ProductDetailScreen.withArgs(product.id.toString()))
+                                rating = product.userRating.toFloat(),
+                                productImage = product.productImageUrl ?: "",
+                                onFavorite = { viewModel.onLike(product.id) }
+                            ) {
+                                navController.navigate(
+                                    Screens.ProductDetailScreen.route + "/${product.id}"
+                                )
                             }
                         }
+
                     }
                 }
-                VerticalLazyGridWithKItemsPerScreen(modifier = Modifier
+
+
+                VerticalLazyGridWithKItemsPerScreen(
+                    modifier = Modifier
                     .fillMaxSize().padding(16.dp), nestedScrollConnection = scrollBehavior.nestedScrollConnection, k = if (gridView) 1 else if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) 2 else 3,
                     spacer = 10,
                     items = productOverviews

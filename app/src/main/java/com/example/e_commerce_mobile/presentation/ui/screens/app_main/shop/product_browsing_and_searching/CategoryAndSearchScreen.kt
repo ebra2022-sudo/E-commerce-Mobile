@@ -229,10 +229,8 @@ fun SubcategoryContentScreen(
                     .fillMaxWidth()
                     .height(120.dp)
                     .clickable(onClick = {
-                        val subCategoryId = subCategory.id
-                        navController.navigate(Screens.SubCategoryProductsOverviewScreen.withArgs(
-                            subCategoryId.toString()
-                        ))
+
+                        navController.navigate(Screens.SubCategoryProductsOverviewScreen.route + "/${subCategory.id}")
                         Log.d("SubcategoryContentScreen", "Subcategory clicked: $subCategory")
                     }),
 
